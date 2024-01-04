@@ -6,6 +6,7 @@ import IconButton from './IconButton';
 import Devpilot from '../assets/devpilot.svg'
 import User from '../assets/user.svg'
 import Loading from './Loading';
+import { sendToPlugin } from '../services/pluginBridge';
 
 const MessageBubbleContainer = styled.div`
   background-color: #555;
@@ -50,7 +51,7 @@ const Time = styled.span`
 const ActionBar = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 5px;
   margin-bottom: 5px;
   position: absolute;
   top: 10px;
@@ -82,11 +83,11 @@ const MessageBubble: React.FC<Message> = (message: Message) => {
   }
 
   const likeThisMessage = () => {
-    console.log('like')
+    sendToPlugin('Like', { message })
   }
 
   const dislikeThisMessage = () => {
-    console.log('dislike')
+    sendToPlugin('Dislike', { message })
   }
 
   return (

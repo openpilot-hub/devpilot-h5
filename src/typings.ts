@@ -1,8 +1,6 @@
 declare global {
   interface Window {
     acquireVsCodeApi: () => any
-    webkitSpeechRecognition: any
-    SpeechRecognition: any
   }
 }
 
