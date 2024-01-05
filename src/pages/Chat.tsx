@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'
-import { Message } from '../typings'
+import React, { useEffect, useRef } from 'react'
 import MessageBubble from '../components/MessageBubble'
 import { createUserMessage, useMessages } from '../services/messages'
 import styled from 'styled-components'
@@ -11,6 +10,7 @@ const MessageStack = styled.div`
   padding: 10px;
   padding-bottom: 50px;
   height: calc(100vh - 30px);
+  background: ${props => props.theme.background};
   &::-webkit-scrollbar {
     width: 8px;
     background-color: transparent;

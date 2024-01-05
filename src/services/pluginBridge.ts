@@ -7,14 +7,23 @@ function getVsCode() {
     window.vscode = window.acquireVsCodeApi()
     return window.vscode
   } else {
-    alert('Not running in VS Code!')
-    return null
+    window.vscode = {
+      mocked: true,
+      postMessage: (message: any) => {
+        console.log('Message to plugin:', message)
+      },
+    }
   }
+  return window.vscode
+}
+
+export function isStandardalone() {
+  return getVsCode().mocked
 }
 
 export function sendToPlugin(command: string, payload: any) {
-  const vscode = getVsCode();
-  return vscode?.postMessage({ command, payload })
+  const vscode = getVsCode()
+  return vscode.postMessage({ command, payload })
 }
 
 export function receiveFromPlugin(command: string, callback: (message: any) => void) {
@@ -30,3 +39,8 @@ export function disposeHandler(handler: any) {
   window.removeEventListener('message', handler)
 }
 
+export async function readThemeFromPlugin() {
+  return new Promise<'light'|'dark'>((resolve) => {
+    resolve(!!document.body.classList.contains('vscode-light') ? 'light' : 'dark')
+  })
+}

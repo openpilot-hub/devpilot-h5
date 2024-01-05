@@ -10,7 +10,7 @@ interface IconButtonProps {
 
 const Button = styled.button`
   background-color: transparent;
-  color: #fff;
+  color: ${props => props.theme.text};
   border: none;
   padding: 5px 8px;
   border-radius: 4px;

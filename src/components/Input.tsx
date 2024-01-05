@@ -8,8 +8,8 @@ const InputContainer = styled.div`
   position: fixed;
   bottom: 0;
   width: 100%;
-  padding: 5px;
-  background-color: #555;
+  padding: 5px 10px;
+  background-color: ${props => props.theme.inputBG};
 `;
 
 const InputField = styled.input`
@@ -19,18 +19,18 @@ const InputField = styled.input`
   border: 1px solid #666;
   border-radius: 4px;
   height: 40px;
-  background-color: #333;
+  background-color: ${props => props.theme.inputFieldBG};
   outline: none;
-  color: white;
-  caret-color: #f0f0f0;
+  color: ${props => props.theme.text};
+  caret-color: ${props => props.theme.text};
   &:focus-visible {
-    outline: #999 solid 1px;
+    outline: ${props => props.theme.inputFieldOutline};
   }
 `;
 
 const SendButton = styled.button`
-  background-color: #999;
-  color: #fff;
+  background-color: ${props => props.theme.btnBG};
+  color: ${props => props.theme.btnText};
   border: none;
   padding: 10px 20px;
   border-radius: 4px;

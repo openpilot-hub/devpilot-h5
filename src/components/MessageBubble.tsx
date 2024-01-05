@@ -9,8 +9,8 @@ import Loading from './Loading';
 import { sendToPlugin } from '../services/pluginBridge';
 
 const MessageBubbleContainer = styled.div`
-  background-color: #555;
-  color: #fff;
+  color: ${props => props.theme.text};
+  background-color: ${props => props.theme.msgBoxBG};
   padding: 10px;
   border-radius: 5px;
   margin-bottom: 10px;

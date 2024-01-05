@@ -1,6 +1,7 @@
 import { Message } from "../typings";
 import { useCallback, useEffect, useState } from 'react';
-import { disposeHandler, receiveFromPlugin, sendToPlugin } from "./pluginBridge";
+import { isStandardalone, disposeHandler, receiveFromPlugin, sendToPlugin } from "./pluginBridge";
+import { mockMessages } from "./mock";
 
 export const createUserMessage = (content: string, time?: string): Message => {
   return {
@@ -23,7 +24,7 @@ export const createAssistantMessage = (content: string, time?: string): Message 
 }
 
 export function useMessages() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(isStandardalone() ? mockMessages() : []);
   
   const sendMessage = useCallback((newMessage: Message) => {
     let newMessageStack = [...messages, newMessage]
