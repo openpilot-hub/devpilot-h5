@@ -1,13 +1,20 @@
-export function sendToPlugin(command: string, payload: any) {
+
+function getVsCode() {
+  if (window.vscode) {
+    return window.vscode
+  }
   if (window.acquireVsCodeApi) {
-    const vscode = window.acquireVsCodeApi()
-    return vscode?.postMessage({ command, payload })
+    window.vscode = window.acquireVsCodeApi()
+    return window.vscode
   } else {
     alert('Not running in VS Code!')
-    if (command === 'AppendToConversation') {
-      receiveFromPlugin('RenderChatConversation', payload)
-    }
+    return null
   }
+}
+
+export function sendToPlugin(command: string, payload: any) {
+  const vscode = getVsCode();
+  return vscode?.postMessage({ command, payload })
 }
 
 export function receiveFromPlugin(command: string, callback: (message: any) => void) {
