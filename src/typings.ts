@@ -1,4 +1,3 @@
-import { disposeHandler } from './services/pluginBridge';
 export interface PluginMessage {
   command: string
   payload: any
@@ -9,7 +8,8 @@ export interface Message {
   role: 'user' | 'assistant' | 'system'
   username: string
   avatar: string
-  time: string
+  time: number
+  streaming: boolean
 }
 
 type DevPilot = {
@@ -25,6 +25,6 @@ declare global {
     devpilot: DevPilot
     acquireVsCodeApi: () => any
     receiveFromIntelliJ: (message: PluginMessage) => void
-    sendToIntelliJ: (message: PluginMessage) => void
+    sendToIntelliJ: (message: string) => void
   }
 }

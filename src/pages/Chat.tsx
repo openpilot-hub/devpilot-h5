@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react'
+import { FaRegStopCircle } from "react-icons/fa";
 import MessageBubble from '../components/MessageBubble'
 import { createUserMessage, useMessages } from '../services/messages'
 import styled from 'styled-components'
@@ -24,9 +25,30 @@ const MessageStack = styled.div`
   }
 `
 
+const StopButtonContainer = styled.div`
+  position: absolute;
+  bottom: 60px;
+  width: 100%;
+  z-index: 100;
+`
+const StopButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100px;
+  font-size: 16px;
+  margin: 0 auto;
+  background: ${props => props.theme.stopStreamBG};
+  color: ${props => props.theme.text};
+  height: 40px;
+  outline: none;
+`
+
 const Chat: React.FC = () => {
-  const { messages, sendMessage } = useMessages()
+  const { messages, sendMessage, interrupMessageStream } = useMessages()
   const messageStackRef = useRef<HTMLDivElement>(null)
+  const streamming = messages[messages.length - 1]?.streaming
 
   useEffect(() => {
     if (messageStackRef.current) {
@@ -49,6 +71,13 @@ const Chat: React.FC = () => {
           sendMessage(createUserMessage(value))
         }}
       />
+      {streamming &&
+        <StopButtonContainer onClick={interrupMessageStream}>
+          <StopButton>
+            <FaRegStopCircle /> Stop
+          </StopButton>
+        </StopButtonContainer>
+      }
     </>
   )
 }

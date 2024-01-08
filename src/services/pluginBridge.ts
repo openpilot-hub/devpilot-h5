@@ -2,7 +2,12 @@ import { PluginMessage } from "../typings"
 
 function getPlugin() {
   if (window.devpilot) {
-    return window.devpilot
+    if (window.devpilot.type !== 'mocked') {
+      return window.devpilot
+    }
+    if (window.devpilot.type === 'mocked' && !(window.acquireVsCodeApi || window.sendToIntelliJ)) {
+      return window.devpilot
+    }
   }
 
   if (window.acquireVsCodeApi) {
@@ -35,10 +40,10 @@ function getPlugin() {
       type: 'intellij',
       callbacks: [],
       receiveFromPlugin(callback) {
-        this.callbacks.push(callback);
+        this.callbacks.push(callback)
       },
       sendToPlugin(message: PluginMessage) {
-        window.sendToIntelliJ(message)
+        window.sendToIntelliJ(JSON.stringify(message))
       },
       disposeHandler(handler: (message: PluginMessage) => void) {
         this.callbacks = this.callbacks.filter((callback: (message: PluginMessage) => void) => {

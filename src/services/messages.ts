@@ -3,23 +3,25 @@ import { useCallback, useEffect, useState } from 'react';
 import { isStandardalone, disposeHandler, receiveFromPlugin, sendToPlugin } from "./pluginBridge";
 import { mockMessages } from "./mock";
 
-export const createUserMessage = (content: string, time?: string): Message => {
+export const createUserMessage = (content: string, time?: number): Message => {
   return {
     content,
     role: 'user',
-    username: 'John Doe',
+    username: 'User',
     avatar: '',
-    time: time ?? new Date().toISOString(),
+    time: time ?? Date.now(),
+    streaming: false,
   }
 }
 
-export const createAssistantMessage = (content: string, time?: string): Message => {
+export const createAssistantMessage = (content: string, time?: number): Message => {
   return {
     content,
     role: 'assistant',
     username: 'DevPilot',
     avatar: '',
-    time: time ?? new Date().toISOString(),
+    time: time ?? Date.now(),
+    streaming: false,
   }
 }
 
@@ -32,6 +34,10 @@ export function useMessages() {
     sendToPlugin('AppendToConversation', newMessage)
   }, [messages]);
 
+  const interrupMessageStream = useCallback(() => {
+    sendToPlugin('InterrupMessageStream', {})
+  }, []);
+
   useEffect(() => {
     const handle = receiveFromPlugin(
       'RenderChatConversation',
@@ -39,5 +45,5 @@ export function useMessages() {
     )
     return () => disposeHandler(handle)
   }, [])
-  return {messages, sendMessage}
+  return {messages, sendMessage, interrupMessageStream}
 }

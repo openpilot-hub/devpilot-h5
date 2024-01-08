@@ -7,6 +7,7 @@ import Devpilot from '../assets/devpilot.svg'
 import User from '../assets/user.svg'
 import Loading from './Loading';
 import { sendToPlugin } from '../services/pluginBridge';
+import Time from './Time';
 
 const MessageBubbleContainer = styled.div`
   color: ${props => props.theme.text};
@@ -43,11 +44,6 @@ const Username = styled.span`
   margin-right: 10px;
 `
 
-const Time = styled.span`
-  font-size: 12px;
-  color: #999;
-`
-
 const ActionBar = styled.div`
   display: flex;
   align-items: center;
@@ -65,8 +61,6 @@ const MessageBubble: React.FC<Message> = (message: Message) => {
 
   username = username ||
     (role === 'assistant' ? 'Devpilot' : role === 'user' ? 'User' : role === 'system' ? 'System' : '')
-
-  time = time || '00:00'
 
   const [isLoading, setIsLoading] = useState(false);
 

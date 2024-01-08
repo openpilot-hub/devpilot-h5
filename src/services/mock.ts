@@ -33,7 +33,7 @@ export function mockMessages(): Message[] {
   \`\`\``
 
   return [
-    createUserMessage('tell me about react', '11:00'),
-    createAssistantMessage(assistantAnswer, '11:01'),
+    createUserMessage('tell me about react'),
+    createAssistantMessage(assistantAnswer),
   ]
 }
