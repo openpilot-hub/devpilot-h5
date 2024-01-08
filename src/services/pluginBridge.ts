@@ -1,42 +1,92 @@
+import { PluginMessage } from "../typings"
 
-function getVsCode() {
-  if (window.vscode) {
-    return window.vscode
+function getPlugin() {
+  if (window.devpilot) {
+    return window.devpilot
   }
+
   if (window.acquireVsCodeApi) {
-    window.vscode = window.acquireVsCodeApi()
-    return window.vscode
-  } else {
-    window.vscode = {
-      mocked: true,
-      postMessage: (message: any) => {
-        console.log('Message to plugin:', message)
+    const vscode = window.acquireVsCodeApi()
+    window.devpilot = {
+      type: 'vscode',
+      callbacks: [],
+      receiveFromPlugin: (callback: (message: PluginMessage) => void) => {
+        return window.addEventListener('message', (event) => {
+          callback(event.data)
+        })
       },
+      sendToPlugin: (message: PluginMessage) => {
+        vscode.postMessage(message)
+      },
+      disposeHandler: (handler: (message: PluginMessage) => void) => {
+        window.removeEventListener('message', handler as any)
+      }
+    }
+    return window.devpilot
+  }
+  
+  if (window.sendToIntelliJ) {
+    window.receiveFromIntelliJ = function(message: PluginMessage) {
+      window.devpilot.callbacks.forEach((callback: (message: PluginMessage) => void) => {
+        callback(message)
+      })
+    },
+    window.devpilot = {
+      type: 'intellij',
+      callbacks: [],
+      receiveFromPlugin(callback) {
+        this.callbacks.push(callback);
+      },
+      sendToPlugin(message: PluginMessage) {
+        window.sendToIntelliJ(message)
+      },
+      disposeHandler(handler: (message: PluginMessage) => void) {
+        this.callbacks = this.callbacks.filter((callback: (message: PluginMessage) => void) => {
+          return callback !== handler
+        })
+      }
+    }
+    return window.devpilot
+  }
+
+  window.devpilot = {
+    type: 'mocked',
+    callbacks: [],
+    receiveFromPlugin: (callback: (message: PluginMessage) => void) => {
+      console.log('Message from plugin:', callback)
+    },
+    sendToPlugin: (message: PluginMessage) => {
+      console.log('Message to plugin:', message)
+    },
+    disposeHandler: (handler: (message: PluginMessage) => void) => {
+      console.log('Handler disposed:', handler)
     }
   }
-  return window.vscode
+
+  return window.devpilot
 }
 
 export function isStandardalone() {
-  return getVsCode().mocked
+  return getPlugin().type === 'mocked'
 }
 
 export function sendToPlugin(command: string, payload: any) {
-  const vscode = getVsCode()
-  return vscode.postMessage({ command, payload })
+  return getPlugin().sendToPlugin({ command, payload })
 }
 
 export function receiveFromPlugin(command: string, callback: (message: any) => void) {
-  const handler = window.addEventListener('message', (event) => {
-    if (event.data.command === command) {
-      callback(event.data.payload);
+  return getPlugin().receiveFromPlugin((message: PluginMessage) => {
+    if (message.command === command) {
+      callback(message.payload)
     }
   })
-  return handler
 }
 
 export function disposeHandler(handler: any) {
-  window.removeEventListener('message', handler)
+  if (!handler) return
+  if (window.devpilot) {
+    window.devpilot.disposeHandler(handler)
+  }
 }
 
 export async function readThemeFromPlugin() {

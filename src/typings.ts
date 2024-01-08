@@ -1,8 +1,7 @@
-declare global {
-  interface Window {
-    acquireVsCodeApi: () => any
-    vscode: any
-  }
+import { disposeHandler } from './services/pluginBridge';
+export interface PluginMessage {
+  command: string
+  payload: any
 }
 
 export interface Message {
@@ -11,4 +10,21 @@ export interface Message {
   username: string
   avatar: string
   time: string
+}
+
+type DevPilot = {
+  type: 'vscode' | 'intellij' | 'mocked'
+  callbacks: Array<(message: PluginMessage) => void>
+  receiveFromPlugin: (callback: (message: PluginMessage) => void) => void
+  sendToPlugin: (message: PluginMessage) => void
+  disposeHandler: (handler: (message: PluginMessage) => void) => void
+}
+
+declare global {
+  interface Window {
+    devpilot: DevPilot
+    acquireVsCodeApi: () => any
+    receiveFromIntelliJ: (message: PluginMessage) => void
+    sendToIntelliJ: (message: PluginMessage) => void
+  }
 }
