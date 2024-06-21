@@ -1,23 +1,26 @@
 import React, { useEffect, useRef } from 'react'
-import { FaRegStopCircle } from "react-icons/fa";
+import { Tooltip } from 'react-tooltip'
 import MessageBubble from '../components/MessageBubble'
-import { createUserMessage, useMessages } from '../services/messages'
+import { createUserMessage, useMessages, createWelcomeMessage, assembleActionsToMessages } from '../services/messages'
 import styled from 'styled-components'
 import Input from '../components/Input'
+import { PluginCommand, QuickCommand } from '../typings';
+import { sendToPlugin, usePluginState } from '../services/pluginBridge';
+import { useI18n } from '../i18n';
+import StopButton from '../components/StopButton';
 
 const MessageStack = styled.div`
-  height: 100%;
   overflow-y: auto;
   padding: 10px;
   padding-bottom: 50px;
-  height: calc(100vh - 30px);
-  background: ${props => props.theme.background};
+  height: calc(100vh - 46px);
+  background: ${({theme: {background = ''}}) => background};
   &::-webkit-scrollbar {
-    width: 8px;
+    width: 0;
     background-color: transparent;
   }
   &::-webkit-scrollbar-thumb {
-    background-color: #888;
+    background-color: transparent;
     border-radius: 4px;
   }
   &::-webkit-scrollbar-track {
@@ -25,36 +28,61 @@ const MessageStack = styled.div`
   }
 `
 
-const StopButtonContainer = styled.div`
-  position: absolute;
-  bottom: 60px;
-  width: 100%;
-  z-index: 100;
-`
-const StopButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  width: 100px;
-  font-size: 16px;
-  margin: 0 auto;
-  background: ${props => props.theme.stopStreamBG};
-  color: ${props => props.theme.text};
-  height: 40px;
-  outline: none;
-`
+const quickCommandMapping: Record<QuickCommand, PluginCommand> = {
+  [QuickCommand.Clear]: PluginCommand.ClearChatHistory,
+  [QuickCommand.Fix]: PluginCommand.FixCode,
+  [QuickCommand.Explain]: PluginCommand.ExplainCode,
+  [QuickCommand.Comment]: PluginCommand.CommentCode,
+  [QuickCommand.Test]: PluginCommand.TestCode,
+  [QuickCommand.Performance]: PluginCommand.CheckCodePerformance,
+}
+
+const actQuickCommand = (value: QuickCommand) => {
+  if (quickCommandMapping[value]) {
+    sendToPlugin(quickCommandMapping[value], {});
+    return true;
+  } else {
+    return false;
+  }
+}
 
 const Chat: React.FC = () => {
-  const { messages, sendMessage, interrupMessageStream } = useMessages()
+  const {text} = useI18n()
+  const username = usePluginState('username')
+  let { messages, sendMessage, interrupMessageStream } = useMessages()
   const messageStackRef = useRef<HTMLDivElement>(null)
-  const streamming = messages[messages.length - 1]?.streaming
+  const stopBtnRef = useRef<HTMLDivElement>(null)
+  const streaming = messages[messages.length - 1]?.streaming
 
+  const quickCommands = Object.values(QuickCommand);
+  
   useEffect(() => {
     if (messageStackRef.current) {
       messageStackRef.current.scrollTop = messageStackRef.current.scrollHeight
     }
   }, [messages])
+
+  useEffect(() => {
+    // @ts-ignore
+    window.__SERAPH_HAS_MONITOR__?.setUser({ userId: username });
+  }, [username]);
+
+  if (messages.length === 0) {
+    messages = [
+      createWelcomeMessage(text, username)
+    ]
+  }
+
+  messages = assembleActionsToMessages(messages, streaming)
+
+  const onInputHeightChanged = (height: number) => {
+    if (messageStackRef.current) {
+      messageStackRef.current.style.height = `calc(100vh - ${height + 26}px)`
+    }
+    if (stopBtnRef.current) {
+      stopBtnRef.current.style.bottom = `${height + 40}px`
+    }
+  }
 
   return (
     <>
@@ -67,17 +95,22 @@ const Chat: React.FC = () => {
         ))}
       </MessageStack>
       <Input
+        quickCommands={quickCommands}
         onSend={(value: string) => {
+          if (actQuickCommand(value as QuickCommand)) {
+            return
+          }
           sendMessage(createUserMessage(value))
         }}
+        onHeightChanged={onInputHeightChanged}
       />
-      {streamming &&
-        <StopButtonContainer onClick={interrupMessageStream}>
-          <StopButton>
-            <FaRegStopCircle /> Stop
-          </StopButton>
-        </StopButtonContainer>
+      {streaming &&
+        <StopButton
+          ref={stopBtnRef}
+          onClick={interrupMessageStream}
+        />
       }
+      <Tooltip id="tooltip" />
     </>
   )
 }

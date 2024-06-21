@@ -1,5 +1,11 @@
 .markdown-renderer {
+  line-height: 1.8;
   ul,ol {
     margin-left: 1.5rem;
+  }
+  .codeStyle {
+    margin: 0 !important;
+    border-top-right-radius: 0 !important;
+    border-top-left-radius: 0 !important;
   }
 }

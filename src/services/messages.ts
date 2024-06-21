@@ -1,49 +1,139 @@
-import { Message } from "../typings";
+import { ChatMessage, ChatMessageAction, PluginCommand, QuickCommand } from "../typings";
 import { useCallback, useEffect, useState } from 'react';
 import { isStandardalone, disposeHandler, receiveFromPlugin, sendToPlugin } from "./pluginBridge";
 import { mockMessages } from "./mock";
+import { Lang, useI18n } from "../i18n";
 
-export const createUserMessage = (content: string, time?: number): Message => {
+export function assembleActionsToMessages(messages: ChatMessage[], loading: boolean): ChatMessage[] {
+  const regen = (loading ? []: ['regenerate']) as ChatMessageAction[]
+  const del = (loading ? []: ['delete']) as ChatMessageAction[]
+  return messages.map((msg, index) => {
+    msg.actions = msg.actions ?? []
+    if (msg.role === 'assistant' && index === 0) {
+      return {
+        ...msg,
+        actions: []
+      }
+    }
+    if (msg.role === 'assistant') {
+      if (index === messages.length - 1) {
+        return {
+          ...msg,
+          actions: ['like', 'dislike', 'copy', ...regen]
+        }
+      } else {
+        return {
+          ...msg,
+          actions: ['like', 'dislike', 'copy']
+        }
+      }
+    }
+    if (msg.role === 'user') {
+      return {
+        ...msg,
+        actions: ['copy', ...del]
+      }
+    }
+    return {...msg}
+  })
+}
+
+export const createUserMessage = (content: string, time?: number): ChatMessage => {
+  if (content === QuickCommand.Clear) {
+    return {
+      id: Math.random().toString(36).substring(7),
+      status: 'ok',
+      content,
+      role: 'divider',
+      username: '',
+      avatar: '',
+      time: time ?? Date.now(),
+      streaming: false,
+      actions: []
+    }
+  }
   return {
+    id: Math.random().toString(36).substring(7),
+    status: 'ok',
     content,
     role: 'user',
     username: 'User',
     avatar: '',
     time: time ?? Date.now(),
     streaming: false,
+    actions: []
   }
 }
 
-export const createAssistantMessage = (content: string, time?: number): Message => {
+export const createWelcomeMessage = (text: Lang, username: string): ChatMessage => {
   return {
+    id: Math.random().toString(36).substring(7),
+    status: 'ok',
+    content: text.welcome.replace('{{USER}}', username),
+    role: 'assistant',
+    username: 'DevPilot',
+    avatar: '',
+    time: Date.now(),
+    streaming: false,
+    actions: []
+  }
+}
+
+export const createAssistantMessage = (content: string, streaming: boolean = false): ChatMessage => {
+  return {
+    id: Math.random().toString(36).substring(7),
+    status: 'ok',
     content,
     role: 'assistant',
     username: 'DevPilot',
     avatar: '',
-    time: time ?? Date.now(),
+    time: Date.now(),
+    streaming,
+    actions: []
+  }
+}
+
+export const createDividerMessage = (): ChatMessage => {
+  return {
+    id: Math.random().toString(36).substring(7),
+    status: 'ok',
+    content: '',
+    role: 'divider',
+    username: '',
+    avatar: '',
+    time: Date.now(),
     streaming: false,
+    actions: []
   }
 }
 
 export function useMessages() {
-  const [messages, setMessages] = useState<Message[]>(isStandardalone() ? mockMessages() : []);
+  const { text } = useI18n()
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const mockMsgs = mockMessages(text)
+
+  useEffect(() => {
+    if (isStandardalone()) {
+      setMessages(mockMsgs)
+    }
+  }, [text])
   
-  const sendMessage = useCallback((newMessage: Message) => {
+  const sendMessage = useCallback((newMessage: ChatMessage) => {
     let newMessageStack = [...messages, newMessage]
     setMessages(newMessageStack);
-    sendToPlugin('AppendToConversation', newMessage)
+    sendToPlugin(PluginCommand.AppendToConversation, newMessage)
   }, [messages]);
 
-  const interrupMessageStream = useCallback(() => {
-    sendToPlugin('InterrupMessageStream', {})
+  const interruptChatStream = useCallback(() => {
+    sendToPlugin(PluginCommand.InterruptChatStream, {})
   }, []);
 
   useEffect(() => {
     const handle = receiveFromPlugin(
-      'RenderChatConversation',
-      (messages) => setMessages(messages)
+      PluginCommand.RenderChatConversation,
+      (messages) => setMessages([...messages])
     )
     return () => disposeHandler(handle)
   }, [])
-  return {messages, sendMessage, interrupMessageStream}
+  return {messages, sendMessage, interrupMessageStream: interruptChatStream}
 }
