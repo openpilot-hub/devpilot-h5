@@ -1,44 +1,53 @@
-import styled from 'styled-components'
-import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter'
-import rangeParser from 'parse-numeric-range'
-import jsx from 'react-syntax-highlighter/dist/cjs/languages/prism/jsx'
-import tsx from 'react-syntax-highlighter/dist/cjs/languages/prism/tsx'
-import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python'
-import java from 'react-syntax-highlighter/dist/cjs/languages/prism/java'
-import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javascript'
-import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript'
-import css from 'react-syntax-highlighter/dist/cjs/languages/prism/css'
-import scss from 'react-syntax-highlighter/dist/cjs/languages/prism/scss'
-import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash'
-import markdown from 'react-syntax-highlighter/dist/cjs/languages/prism/markdown'
-import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json'
-import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism'
-import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism'
-import './Markdown.css'
+import styled from 'styled-components';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import rangeParser from 'parse-numeric-range';
+import { Menu, Item, useContextMenu } from 'react-contexify';
+import jsx from 'react-syntax-highlighter/dist/cjs/languages/prism/jsx';
+import tsx from 'react-syntax-highlighter/dist/cjs/languages/prism/tsx';
+import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
+import java from 'react-syntax-highlighter/dist/cjs/languages/prism/java';
+import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javascript';
+import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
+import css from 'react-syntax-highlighter/dist/cjs/languages/prism/css';
+import scss from 'react-syntax-highlighter/dist/cjs/languages/prism/scss';
+import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
+import markdown from 'react-syntax-highlighter/dist/cjs/languages/prism/markdown';
+import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
+import less from 'react-syntax-highlighter/dist/cjs/languages/prism/less';
+import stylus from 'react-syntax-highlighter/dist/cjs/languages/prism/stylus';
+import sql from 'react-syntax-highlighter/dist/cjs/languages/prism/sql';
+import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import './Markdown.css';
 
-import IconButton from './IconButton'
+import IconButton from './IconButton';
 import { useTheme } from '../themes/themes';
 import { PluginCommand } from '../typings';
 import { useI18n } from '@/i18n';
 import React from 'react';
 import RAGFileList from './RAGFileList';
 
-SyntaxHighlighter.registerLanguage('jsx', jsx)
-SyntaxHighlighter.registerLanguage('tsx', tsx)
-SyntaxHighlighter.registerLanguage('javascript', javascript)
-SyntaxHighlighter.registerLanguage('js', javascript)
-SyntaxHighlighter.registerLanguage('typescript', typescript)
-SyntaxHighlighter.registerLanguage('ts', typescript)
-SyntaxHighlighter.registerLanguage('css', css)
-SyntaxHighlighter.registerLanguage('scss', scss)
-SyntaxHighlighter.registerLanguage('bash', bash)
-SyntaxHighlighter.registerLanguage('markdown', markdown)
-SyntaxHighlighter.registerLanguage('json', json)
-SyntaxHighlighter.registerLanguage('java', java)
-SyntaxHighlighter.registerLanguage('python', python)
+// SyntaxHighlighter.registerLanguage('javascriptreact', jsx) // 不生效
+SyntaxHighlighter.registerLanguage('jsx', jsx);
+// SyntaxHighlighter.registerLanguage('typescriptreact', tsx) // 不生效
+SyntaxHighlighter.registerLanguage('tsx', tsx);
+SyntaxHighlighter.registerLanguage('javascript', javascript);
+SyntaxHighlighter.registerLanguage('js', javascript);
+SyntaxHighlighter.registerLanguage('typescript', typescript);
+SyntaxHighlighter.registerLanguage('ts', typescript);
+SyntaxHighlighter.registerLanguage('css', css);
+SyntaxHighlighter.registerLanguage('scss', scss);
+SyntaxHighlighter.registerLanguage('less', less);
+SyntaxHighlighter.registerLanguage('stylus', stylus);
+SyntaxHighlighter.registerLanguage('bash', bash);
+SyntaxHighlighter.registerLanguage('markdown', markdown);
+SyntaxHighlighter.registerLanguage('json', json);
+SyntaxHighlighter.registerLanguage('java', java);
+SyntaxHighlighter.registerLanguage('python', python);
+SyntaxHighlighter.registerLanguage('sql', sql);
 
 function replaceLast(str: string, occurence: string, replacement: string) {
-  return str.replace(new RegExp(`${occurence}$`), replacement)
+  return str.replace(new RegExp(`${occurence}$`), replacement);
 }
 
 function skip<T extends object, K extends keyof T>(props: T, key: K): Omit<T, K> {
@@ -47,21 +56,21 @@ function skip<T extends object, K extends keyof T>(props: T, key: K): Omit<T, K>
 }
 
 const CodeEditor = styled.div`
-  border: ${props => props.theme.border};
+  border: ${(props) => props.theme.border};
   border-radius: 8px;
   margin: 1em 0;
   overflow: hidden;
   .codeStyle {
     padding-bottom: 0px !important;
   }
-`
+`;
 const CodeEditorActionBar = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 1px;
-  border-bottom: ${props => props.theme.border};
-`
+  border-bottom: ${(props) => props.theme.border};
+`;
 
 const LanguageTag = styled.div`
   padding: 0 10px;
@@ -69,8 +78,8 @@ const LanguageTag = styled.div`
   font-weight: bold;
   flex-grow: 1;
   font-family: monospace;
-  color: ${props => props.theme.text};
-`
+  color: ${(props) => props.theme.text};
+`;
 
 const getSelectedText = () => {
   const selection = document.getSelection();
@@ -95,79 +104,93 @@ const getContent = (content: string) => {
 const MarkdownComponents = () => {
   const comp = {
     codeblockActions(action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }): void {
-      throw new Error('Method not implemented.')
+      throw new Error('Method not implemented.');
     },
     linkActions(href: string): boolean {
-      throw new Error('Method not implemented.')
+      throw new Error('Method not implemented.');
     },
     a({ node, ...props }: any) {
-      return <a {...props} onClick={(event) => {
-        const preventDefault = this.linkActions(node.properties.href)
-        if (preventDefault) {
-          event.preventDefault()
-          event.stopPropagation()
-        }
-      }} />
+      return (
+        <a
+          {...props}
+          onClick={(event) => {
+            const preventDefault = this.linkActions(node.properties.href);
+            if (preventDefault) {
+              event.preventDefault();
+              event.stopPropagation();
+            }
+          }}
+        />
+      );
     },
     div(params: any) {
       const { node, className, ...props } = params;
-      if (className === 'rag-files') {
+      if (className === 'rag-files' && params.children) {
         const repo = props['data-repo'];
         return (
           <RAGFileList
-            files={params.children.map((child: any) => child.props.children[0])}
+            files={params.children.map((child: any) => child.props.children?.[0])}
             clickAction={(file: string) => {
               this.codeblockActions(PluginCommand.OpenFile, file, 'text', { repo });
             }}
           />
-        )
+        );
       } else {
         return React.createElement('div', props, params.children);
       }
     },
     code({ node, className, ...props }: any) {
-      const hasLang = /language-(\w+)/.exec(className || '')
-      const lang = hasLang ? hasLang[1] : ''
-      const hasMeta = node?.data?.meta
-      const inline = node.properties.inline === 'true'
+      const hasLang = /language-(\w+)/.exec(className || '');
+      const lang = hasLang ? hasLang[1] : '';
+      const hasMeta = node?.data?.meta;
+      const inline = node.properties.inline === 'true';
 
       const applyHighlights: object = (applyHighlights: number) => {
         if (hasMeta) {
           const RE = /{([\d,-]+)}/;
-          const metadata = node.data.meta?.replace(/\s/g, '')
-          const strlineNumbers = RE.test(metadata)
-            ? RE.exec(metadata)![1]
-            : '0'
-          const highlightLines = rangeParser(strlineNumbers)
-          const highlight = highlightLines
-          const data = highlight.includes(applyHighlights)
-            ? 'highlight'
-            : null
-          return { data }
+          const metadata = node.data.meta?.replace(/\s/g, '');
+          const strlineNumbers = RE.test(metadata) ? RE.exec(metadata)![1] : '0';
+          const highlightLines = rangeParser(strlineNumbers);
+          const highlight = highlightLines;
+          const data = highlight.includes(applyHighlights) ? 'highlight' : null;
+          return { data };
         } else {
-          return {}
+          return {};
         }
-      }
+      };
 
       const theme = useTheme();
       const { text } = useI18n();
       const syntaxTheme = theme === 'dark' ? oneDark : oneLight;
       const content = replaceLast(props.children[0], '\n', '');
+      const { show, hideAll } = useContextMenu({ id: 'CODEBLOCK_CONTEXT_MENU' });
+
+      function handleContextMenu(event: any) {
+        event.stopPropagation();
+        show({
+          event,
+          props: {
+            key: 'value',
+          },
+        });
+      }
 
       return !inline ? (
-        <CodeEditor>
+        <CodeEditor onContextMenu={handleContextMenu}>
           <CodeEditorActionBar>
             {lang && <LanguageTag>{lang}</LanguageTag>}
-            <IconButton icon='cursor' type='fade' title={text.codeblockActions.insertAtCursor}
-              onClick={() => this.codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang)}
-            />
-            <IconButton icon='replace' type='fade' title={text.codeblockActions.replaceSelectedCode}
+            <IconButton icon="cursor" type="fade" title={text.codeblockActions.insertAtCursor} onClick={() => this.codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang)} />
+            <IconButton
+              icon="replace"
+              type="fade"
+              title={text.codeblockActions.replaceSelectedCode}
               onClick={() => this.codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content), lang)}
             />
-            <IconButton icon='file' type='fade' title={text.codeblockActions.createFileWithCode}
-              onClick={() => this.codeblockActions(PluginCommand.CreateNewFile, getContent(content), lang)}
-            />
-            <IconButton icon='copy' type='fade' title={text.codeblockActions.copyToClipboard}
+            <IconButton icon="file" type="fade" title={text.codeblockActions.createFileWithCode} onClick={() => this.codeblockActions(PluginCommand.CreateNewFile, getContent(content), lang)} />
+            <IconButton
+              icon="copy"
+              type="fade"
+              title={text.codeblockActions.copyToClipboard}
               onClick={() => {
                 let _content = getContent(content);
                 navigator?.clipboard?.writeText(_content);
@@ -175,31 +198,42 @@ const MarkdownComponents = () => {
               }}
             />
           </CodeEditorActionBar>
-          <SyntaxHighlighter
-            style={syntaxTheme}
-            language={lang}
-            PreTag="div"
-            className="codeStyle"
-            showLineNumbers={true}
-            wrapLines={hasMeta}
-            useInlineStyles={true}
-            lineProps={applyHighlights}
-          >
+          <SyntaxHighlighter style={syntaxTheme} language={lang} PreTag="div" className="codeStyle" showLineNumbers={true} wrapLines={hasMeta} useInlineStyles={true} lineProps={applyHighlights}>
             {content}
           </SyntaxHighlighter>
+          <Menu id={'CODEBLOCK_CONTEXT_MENU'} theme={theme} animation={false}>
+            <Item
+              id="text.codeblockActions.replaceSelectedCode"
+              onClick={() => {
+                this.codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content), lang);
+                hideAll();
+              }}
+            >
+              {text.codeblockActions.replaceSelectedCode}
+            </Item>
+            <Item
+              id="text.codeblockActions.insertAtCursor"
+              onClick={() => {
+                this.codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang);
+                hideAll();
+              }}
+            >
+              {text.codeblockActions.insertAtCursor}
+            </Item>
+          </Menu>
         </CodeEditor>
       ) : (
         <code className={className} {...skip(props, 'inline')} />
-      )
-    }
-  }
+      );
+    },
+  };
 
-  comp.code = comp.code.bind(comp)
-  comp.div = comp.div.bind(comp)
-  comp.a = comp.a.bind(comp)
+  comp.code = comp.code.bind(comp);
+  comp.div = comp.div.bind(comp);
+  comp.a = comp.a.bind(comp);
 
-  return comp
-}
+  return comp;
+};
 
 export type MarkdownComponents = ReturnType<typeof MarkdownComponents>;
 

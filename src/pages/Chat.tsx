@@ -100,6 +100,8 @@ const Chat: React.FC = () => {
           if (actQuickCommand(value as QuickCommand)) {
             return
           }
+          // 如果用户输入了标签，则替换掉
+          value = value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
           sendMessage(createUserMessage(value))
         }}
         onHeightChanged={onInputHeightChanged}
