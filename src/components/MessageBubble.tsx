@@ -109,7 +109,7 @@ const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
 
   const MENU_ID = 'MESSAGE_BUBBLE_CONTEXT_MENU';
   
-  const {show} = useContextMenu({ id: MENU_ID });
+  const {show, hideAll} = useContextMenu({ id: MENU_ID });
 
   function handleContextMenu(event: any) {
     show({
@@ -225,11 +225,23 @@ const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
           </>
         }
       </ErrorBoundary>
-      <Menu id={MENU_ID} theme={theme}>
-        <Item id="regenerate" onClick={retryThisMessage}>{text.retryMsg}</Item>
-        <Item id="copy" onClick={copyThisMessage}>{text.copyMsg}</Item>
-        <Item id="like" onClick={likeThisMessage}>{text.likeMsg}</Item>
-        <Item id="dislike" onClick={dislikeThisMessage}>{text.dislikeMsg}</Item>
+      <Menu id={MENU_ID} theme={theme} animation={false}>
+        <Item id="regenerate" onClick={() => {
+          retryThisMessage();
+          hideAll();
+        }}>{text.retryMsg}</Item>
+        <Item id="copy" onClick={() => {
+          copyThisMessage();
+          hideAll();
+        }}>{text.copyMsg}</Item>
+        <Item id="like" onClick={() => {
+          likeThisMessage();
+          hideAll();
+        }}>{text.likeMsg}</Item>
+        <Item id="dislike" onClick={() => {
+          dislikeThisMessage();
+          hideAll();
+        }}>{text.dislikeMsg}</Item>
       </Menu>
     </MessageBubbleContainer>
   )
