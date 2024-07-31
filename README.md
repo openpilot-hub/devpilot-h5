@@ -8,13 +8,13 @@
 
 </div>
 
-# Devpilot Webview
+# DevPilot Webview
 
-Welcome to the **Devpilot Webview** project! This README will guide you through the process of setting up, running, and building the webview for integration with the Devpilot editor plugin.
+Welcome to the **DevPilot Webview** project! This README will guide you through the process of setting up, running, and building the webview for integration with the DevPilot editor plugin.
 
 ## Project Introduction
 
-Devpilot Webview is a subproject of the DevPilot initiative, designed specifically to embed a Webview within IDEs like VSCode and IntelliJ. This Webview allows users to experience the rich features of DevPilot directly within their development environment, enhancing both efficiency and user experience.
+DevPilot Webview is a subproject of the DevPilot initiative, designed specifically to embed a Webview within IDEs like VSCode and IntelliJ. This Webview allows users to experience the rich features of DevPilot directly within their development environment, enhancing both efficiency and user experience.
 
 ## Getting Started
 
@@ -59,7 +59,7 @@ This command creates an optimized production build of the application in the `di
 
 ### Integrating with the Editor Plugin
 
-To integrate the built webview with the Devpilot editor plugin, you need to copy the built `index.html` file to the plugin's distribution directory. Assuming the plugin repository is located in the same parent directory as the `devpilot-h5` repository, run:
+To integrate the built webview with the DevPilot editor plugin, you need to copy the built `index.html` file to the plugin's distribution directory. Assuming the plugin repository is located in the same parent directory as the `devpilot-h5` repository, run:
 
 ```sh
 pnpm run build && cp dist/index.html ../devpilot-vscode/dist/index.html

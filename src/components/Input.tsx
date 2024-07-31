@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
-import styled, { useTheme } from 'styled-components'
-import IconButton from './IconButton';
-import { BsFillSendFill } from "react-icons/bs";
+import { useEffect, useRef, useState } from 'react';
+import { BsFillSendFill } from 'react-icons/bs';
 import TextareaAutosize from 'react-textarea-autosize';
-import { QuickCommand } from '../typings';
+import styled, { useTheme } from 'styled-components';
 import { useI18n } from '../i18n';
+import { QuickCommand } from '../typings';
+import IconButton from './IconButton';
 import RepoLabel from './RepoLabel';
 
 const InputContainer = styled.div`
@@ -19,8 +19,8 @@ const InputContainer = styled.div`
   padding: 10px;
   padding-bottom: 20px;
   padding-left: 2px;
-  background-color: ${props => props.theme.inputBG};
-  box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.24);
+  background-color: ${(props) => props.theme.inputBG};
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.24);
   z-index: 1;
 `;
 
@@ -30,16 +30,16 @@ const InputField = styled(TextareaAutosize)`
   padding-right: 2em;
   border: 1px solid #666;
   border-radius: 4px;
-  background-color: ${props => props.theme.inputFieldBG};
+  background-color: ${(props) => props.theme.inputFieldBG};
   outline: none;
   resize: none;
   min-height: 34px;
   line-height: 24px;
   overflow-y: hidden;
-  color: ${props => props.theme.text};
-  caret-color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
+  caret-color: ${(props) => props.theme.text};
   &:focus-visible {
-    outline: ${props => props.theme.inputFieldOutline};
+    outline: ${(props) => props.theme.inputFieldOutline};
   }
 `;
 
@@ -53,9 +53,9 @@ const Float = styled.div`
   align-self: stretch;
   overflow: visible;
   svg {
-    color: ${props => props.theme.textFaint};
+    color: ${(props) => props.theme.textFaint};
   }
-`
+`;
 
 const CommandBox = styled.div`
   position: absolute;
@@ -63,21 +63,21 @@ const CommandBox = styled.div`
   left: 50px;
   padding: 0;
   min-width: 100px;
-  color: ${props => props.theme.text};
-  background-color: ${props => props.theme.codeBG};
-  border: 1px solid ${props => props.theme.border};
+  color: ${(props) => props.theme.text};
+  background-color: ${(props) => props.theme.codeBG};
+  border: 1px solid ${(props) => props.theme.border};
   border-radius: 4px;
-  box-shadow: 0px 4px 6px rgba(0,0,0,0.1);
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 `;
 
 const CommandItem = styled.div<{ $highlight: boolean }>`
-  background-color: ${props => props.$highlight ? props.theme.highlightBG : 'transparent'};
+  background-color: ${(props) => (props.$highlight ? props.theme.highlightBG : 'transparent')};
   cursor: pointer;
   padding: 5px 10px;
   font-family: monospace, consolas, courier-new, sans-serif;
   &:hover {
-    background-color: ${props => props.theme.hoverBG};
+    background-color: ${(props) => props.theme.hoverBG};
   }
 `;
 
@@ -91,7 +91,7 @@ const ShortcutHint = styled.div`
   width: calc(100% - 46px);
   font-size: 12px;
   line-height: 1;
-  color: ${props => props.theme.textFaint};
+  color: ${(props) => props.theme.textFaint};
   display: flex;
   flex-direction: row;
   .text {
@@ -106,20 +106,18 @@ const ShortcutHint = styled.div`
 `;
 
 interface InputProps {
-  quickCommands: string[]
-  onSend: (value: string) => void,
-  onHeightChanged: (height: number) => void,
+  onHeightChanged: (height: number) => void;
+  onSend: (value: string) => void;
+  quickCommands: string[];
 }
 
 export default function Input({ onSend, quickCommands, onHeightChanged }: InputProps) {
   const theme = useTheme();
   const [value, setValue] = useState('');
-  const [prevValues, setPrevValues] = useState<string[]>([])
-  const [prevIndex, setPrevIndex] = useState<number>(0)
+  const [prevValues, setPrevValues] = useState<string[]>([]);
+  const [prevIndex, setPrevIndex] = useState<number>(0);
   const { text } = useI18n();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const multilines = value.split('\n').length > 1;
 
   const [commandBoxVisible, setCommandBoxVisible] = useState(false);
   const [filteredCommands, setFilteredCommands] = useState(quickCommands);
@@ -130,22 +128,22 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
       textareaRef.current.focus();
       textareaRef.current.value = '@repo ';
     }
-  }
+  };
 
   useEffect(() => {
-    const newFilteredCommands = quickCommands.filter(cmd => cmd.startsWith(value));
+    const newFilteredCommands = quickCommands.filter((cmd) => cmd.startsWith(value));
     setFilteredCommands(newFilteredCommands);
     if (value === '、') {
       setValue('/');
-      return
+      return;
     }
     if (value === '/') {
-      setCommandBoxVisible(true)
+      setCommandBoxVisible(true);
     }
     if (value === '') {
-      setCommandBoxVisible(false)
+      setCommandBoxVisible(false);
     }
-  }, [value, setSelectedCommandIndex])
+  }, [value, setSelectedCommandIndex]);
 
   useEffect(() => {
     if (!textareaRef || !textareaRef.current) {
@@ -159,17 +157,17 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
 
   const handleClearHistory = () => {
     onSend(QuickCommand.Clear);
-  }
+  };
 
   const handleSendMessage = () => {
-    if (value.trim() !== '') {
-      const newPrevValues = [...prevValues, value.trim()]
-      setPrevValues(newPrevValues)
-      setPrevIndex(newPrevValues.length)
-      setValue('')
-      onSend(value.trim())
+    if (value.trim()) {
+      const newPrevValues = [...prevValues, value.trim()];
+      setPrevValues(newPrevValues);
+      setPrevIndex(newPrevValues.length);
+      setValue('');
+      onSend(value.trim());
     }
-  }
+  };
 
   const handleSelectCommand = (command: string) => {
     setValue(command);
@@ -184,11 +182,7 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
 
   const handleKeyDown = (e: any) => {
     const tf: any = textareaRef.current;
-    if (!tf)
-      return;
-
-    tf.caret0 = tf.selectionStart === 0;
-
+    if (!tf) return;
     if (e.key === 'Enter' && (e.isComposing || e.keyCode === 229)) {
       return;
     }
@@ -200,57 +194,51 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
           e.preventDefault();
         } else {
           e.preventDefault();
-          handleSendMessage();  
+          handleSendMessage();
         }
       } else if (!e.shiftKey) {
         e.preventDefault();
         handleSendMessage();
       }
     }
-  }
+  };
 
   const handleKeyUp = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     const tf: any = textareaRef.current;
-    if (!tf)
-      return;
+    if (!tf) return;
+
+    // tf.caret0 = tf.selectionStart === 0;
 
     if (e.key === 'Escape') {
       commandBoxVisible && setCommandBoxVisible(false);
       return;
     }
+
+    const multilines = (!!value && value.split('\n').length > 1) || false;
+
     if (e.key === 'ArrowUp') {
       if (commandBoxVisible) {
-        setSelectedCommandIndex(prevIndex =>
-          prevIndex > 0 ? prevIndex - 1 : filteredCommands.length - 1
-        );
-        e.preventDefault(); // Prevent cursor from moving in input field
-      } else if (!multilines && tf.caret0) {
-        let index = prevIndex - 1
-        if (index < 0) {
-          index = 0
-          setPrevIndex(index)
-        } else {
-          setPrevIndex(index)
-          setValue(prevValues[index])
+        setSelectedCommandIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : filteredCommands.length - 1));
+        // Prevent cursor from moving in input field
+        e.preventDefault();
+      } else if (!multilines) {
+        let index = prevIndex - 1;
+        if (index >= 0 && index < prevValues.length) {
+          setPrevIndex(index);
+          setValue(prevValues[index]);
+          e.preventDefault();
         }
       }
     } else if (e.key === 'ArrowDown') {
       if (commandBoxVisible) {
-        setSelectedCommandIndex(prevIndex =>
-          prevIndex < filteredCommands.length - 1 ? prevIndex + 1 : 0
-        );
-        e.preventDefault(); // Prevent cursor from moving in input field
+        setSelectedCommandIndex((prevIndex) => (prevIndex < filteredCommands.length - 1 ? prevIndex + 1 : 0));
+        // Prevent cursor from moving in input field
+        e.preventDefault();
       } else if (!multilines) {
-        if (prevIndex + 1 === prevValues.length) {
-          setValue('');
-        } else {
-          let index = prevIndex + 1
-          if (index >= prevValues.length) {
-            setValue('')
-          } else {
-            setPrevIndex(index)
-            setValue(prevValues[index])
-          }
+        let index = prevIndex + 1;
+        if (index < prevValues.length) {
+          setPrevIndex(index);
+          setValue(prevValues[index]);
         }
       }
     }
@@ -258,7 +246,7 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
 
   return (
     <InputContainer>
-      <IconButton size='large' icon="clear" type="fade" onClick={handleClearHistory} />
+      <IconButton size="large" icon="clear" type="fade" onClick={handleClearHistory} />
       <InputField
         ref={textareaRef}
         value={value}
@@ -272,18 +260,18 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
           style={{
             fontSize: '1.5em',
             color: value.trim() ? theme.btnBG : theme.textFaint,
-            cursor: value.trim() ? 'pointer' : 'not-allowed'
+            cursor: value.trim() ? 'pointer' : 'not-allowed',
           }}
           onClick={handleSendMessage}
         />
       </Float>
-      {commandBoxVisible &&
+      {commandBoxVisible && (
         <CommandBox>
           {filteredCommands.map((command, index) => (
             <CommandItem
               key={command}
               onClick={() => {
-                handleSelectCommand(command)
+                handleSelectCommand(command);
               }}
               $highlight={index === selectedCommandIndex}
             >
@@ -291,15 +279,11 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
             </CommandItem>
           ))}
         </CommandBox>
-      }
+      )}
       <ShortcutHint>
-        <RepoLabel
-          onClick={onRepoLabelClick}
-        />
-        <span className='text'>
-          &nbsp;{text.shortcutHint}
-        </span>
+        <RepoLabel onClick={onRepoLabelClick} />
+        <span className="text">&nbsp;{text.shortcutHint}</span>
       </ShortcutHint>
     </InputContainer>
-  )
+  );
 }

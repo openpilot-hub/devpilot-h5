@@ -8,13 +8,13 @@
 
 </div>
 
-# Devpilot Webview
+# DevPilot Webview
 
-欢迎来到 **Devpilot Webview** 项目！此 README 将指导您设置、运行和构建 Webview，以便与 Devpilot 编辑器插件集成。
+欢迎来到 **DevPilot Webview** 项目！此 README 将指导您设置、运行和构建 Webview，以便与 DevPilot 编辑器插件集成。
 
 ## 项目简介
 
-Devpilot Webview 是 DevPilot 计划的一个子项目，专为在 VSCode 和 IntelliJ 等 IDE 中嵌入 Webview 而设计。此 Webview 允许用户直接在他们的开发环境中体验 DevPilot 的丰富功能，从而提升效率和用户体验。
+DevPilot Webview 是 DevPilot 计划的一个子项目，专为在 VSCode 和 IntelliJ 等 IDE 中嵌入 Webview 而设计。此 Webview 允许用户直接在他们的开发环境中体验 DevPilot 的丰富功能，从而提升效率和用户体验。
 
 ## 入门指南
 
@@ -59,7 +59,7 @@ pnpm run build
 
 ### 与编辑器插件集成
 
-要将构建的 Webview 集成到 Devpilot 编辑器插件中，您需要将构建的 `index.html` 文件复制到插件的分发目录。假设插件仓库位于与 `devpilot-h5` 仓库相同的父目录中，请运行：
+要将构建的 Webview 集成到 DevPilot 编辑器插件中，您需要将构建的 `index.html` 文件复制到插件的分发目录。假设插件仓库位于与 `devpilot-h5` 仓库相同的父目录中，请运行：
 
 ```sh
 pnpm run build && cp dist/index.html ../devpilot-vscode/dist/index.html
