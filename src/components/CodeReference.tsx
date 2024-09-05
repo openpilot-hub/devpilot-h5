@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
+import { TbCodeDots as CodeIcon } from 'react-icons/tb';
 import styled, { css, keyframes } from 'styled-components';
-import { CodeReference, PluginCommand } from '../typings';
-import { sendToPlugin } from '../services/pluginBridge';
-import { TbCodeDots as CodeIcon } from "react-icons/tb";
 import { useI18n } from '../i18n';
+import { sendToPlugin } from '../services/pluginBridge';
+import { CodeReference, PluginCommand } from '../typings';
 
 const blinkFade = keyframes`
   0% {
     background-color: #48a4ff;
   }
   100% {
-    background-color: ${props => props.theme.codeBG};
+    background-color: ${(props) => props.theme.codeBG};
   }
 `;
 
@@ -18,8 +18,8 @@ const CodeRefContainer = styled.div<{ $animate: boolean }>`
   display: flex;
   flex-direction: row;
   align-items: center;
-  background-color: ${props => props.theme.codeBG};
-  border: ${props => props.theme.border};
+  background-color: ${(props) => props.theme.codeBG};
+  border: ${(props) => props.theme.border};
   padding: 8px 8px;
   margin: 5px 0;
   border-radius: 5px;
@@ -27,11 +27,13 @@ const CodeRefContainer = styled.div<{ $animate: boolean }>`
   cursor: pointer;
   overflow: hidden;
   gap: 5px;
-  
-  ${props => props.$animate && css`
-    animation: ${blinkFade} 1s ease;
-  `}
-`
+
+  ${(props) =>
+    props.$animate &&
+    css`
+      animation: ${blinkFade} 1s ease;
+    `}
+`;
 
 const Filename = styled.div`
   font-weight: bold;
@@ -41,7 +43,7 @@ const Filename = styled.div`
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
-`
+`;
 
 const Lines = styled.span`
   padding-top: 2px;
@@ -49,20 +51,20 @@ const Lines = styled.span`
   margin-right: 5px;
   line-height: 1;
   flex-shrink: 0;
-  color: ${props => props.theme.textFaint};
-`
+  color: ${(props) => props.theme.textFaint};
+`;
 
 const RightPadding = styled.div`
   flex-shrink: 0;
-`
+`;
 
 const Icon = styled.span`
   font-size: 20px;
   flex-grow: 0;
   flex-shrink: 0;
-  color: ${props => props.theme.primary};
+  color: ${(props) => props.theme.primary};
   line-height: 1ex;
-`
+`;
 
 const CodeReferenceView: React.FC<CodeReference> = (props: CodeReference) => {
   const { text } = useI18n();
@@ -72,24 +74,23 @@ const CodeReferenceView: React.FC<CodeReference> = (props: CodeReference) => {
     setAnimate(true);
     sendToPlugin(PluginCommand.GotoSelectedCode, props);
     setTimeout(() => setAnimate(false), 200);
-  }
+  };
 
-  const {
-    fileName,
-    selectedStartLine,
-    selectedEndLine,
-  } = props
+  const { fileName, selectedStartLine, selectedEndLine } = props;
+
   return (
-    <CodeRefContainer
-      $animate={animate}
-      onClick={handleOnClick}
-    >
+    <CodeRefContainer $animate={animate} onClick={handleOnClick}>
       <div>{text.quoted}:&nbsp;&nbsp;</div>
-      <Icon><CodeIcon /></Icon>
-      <Filename>{fileName}:</Filename><Lines>{selectedStartLine}-{selectedEndLine}</Lines>
+      <Icon>
+        <CodeIcon />
+      </Icon>
+      <Filename>{fileName}:</Filename>
+      <Lines>
+        {selectedStartLine + 1}-{selectedEndLine + 1}
+      </Lines>
       <RightPadding />
     </CodeRefContainer>
-  )
-}
+  );
+};
 
-export default CodeReferenceView
+export default CodeReferenceView;

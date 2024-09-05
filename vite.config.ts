@@ -1,8 +1,9 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react-swc';
-import { viteSingleFile } from 'vite-plugin-singlefile';
 import { resolve } from 'path';
+import { defineConfig } from 'vite';
+import { viteSingleFile } from 'vite-plugin-singlefile';
 
+// https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), viteSingleFile()],
   build: {
@@ -17,5 +18,5 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
-  server: { open: '/ext' },
+  server: { host: '0.0.0.0', open: '/ext' },
 });

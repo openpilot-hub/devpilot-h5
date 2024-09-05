@@ -1,32 +1,20 @@
-import React, { useEffect, useRef } from 'react'
-import { Tooltip } from 'react-tooltip'
-import MessageBubble from '../components/MessageBubble'
-import { createUserMessage, useMessages, createWelcomeMessage, assembleActionsToMessages } from '../services/messages'
-import styled from 'styled-components'
-import Input from '../components/Input'
-import { PluginCommand, QuickCommand } from '../typings';
-import { sendToPlugin, usePluginState } from '../services/pluginBridge';
-import { useI18n } from '../i18n';
+import React, { useEffect, useRef } from 'react';
+import { Tooltip } from 'react-tooltip';
+import styled from 'styled-components';
+import InputBox from '../components/Input';
+import MessageBubble from '../components/MessageBubble';
 import StopButton from '../components/StopButton';
+import { useI18n } from '../i18n';
+import { assembleActionsToMessages, createUserMessage, createWelcomeMessage, useMessages } from '../services/messages';
+import { sendToPlugin, usePluginState } from '../services/pluginBridge';
+import { ChatMessage, CodeReference, PluginCommand, QuickCommand } from '../typings';
 
 const MessageStack = styled.div`
   overflow-y: auto;
-  padding: 10px;
-  padding-bottom: 50px;
-  height: calc(100vh - 46px);
-  background: ${({theme: {background = ''}}) => background};
-  &::-webkit-scrollbar {
-    width: 0;
-    background-color: transparent;
-  }
-  &::-webkit-scrollbar-thumb {
-    background-color: transparent;
-    border-radius: 4px;
-  }
-  &::-webkit-scrollbar-track {
-    background-color: transparent;
-  }
-`
+  padding: 10px 10px 50px;
+  flex: 1;
+  background: ${({ theme: { background = '' } }) => background};
+`;
 
 const quickCommandMapping: Record<QuickCommand, PluginCommand> = {
   [QuickCommand.Clear]: PluginCommand.ClearChatHistory,
@@ -34,33 +22,32 @@ const quickCommandMapping: Record<QuickCommand, PluginCommand> = {
   [QuickCommand.Explain]: PluginCommand.ExplainCode,
   [QuickCommand.Comment]: PluginCommand.CommentCode,
   [QuickCommand.Test]: PluginCommand.TestCode,
-  [QuickCommand.Performance]: PluginCommand.CheckCodePerformance,
-}
+  // [QuickCommand.Performance]: PluginCommand.CheckCodePerformance,
+};
 
-const actQuickCommand = (value: QuickCommand) => {
+const actQuickCommand = (value: QuickCommand, payload?: ChatMessage) => {
   if (quickCommandMapping[value]) {
-    sendToPlugin(quickCommandMapping[value], {});
+    sendToPlugin(quickCommandMapping[value], payload);
     return true;
   } else {
     return false;
   }
-}
+};
 
 const Chat: React.FC = () => {
-  const {text} = useI18n()
-  const username = usePluginState('username')
-  let { messages, sendMessage, interrupMessageStream } = useMessages()
-  const messageStackRef = useRef<HTMLDivElement>(null)
-  const stopBtnRef = useRef<HTMLDivElement>(null)
-  const streaming = messages[messages.length - 1]?.streaming
+  const { text } = useI18n();
+  const username = usePluginState('username');
+  let { messages, sendMessage, interrupMessageStream } = useMessages();
+  const messageStackRef = useRef<HTMLDivElement>(null);
+  const streaming = messages[messages.length - 1]?.streaming;
 
   const quickCommands = Object.values(QuickCommand);
-  
+
   useEffect(() => {
     if (messageStackRef.current) {
-      messageStackRef.current.scrollTop = messageStackRef.current.scrollHeight
+      messageStackRef.current.scrollTop = messageStackRef.current.scrollHeight;
     }
-  }, [messages])
+  }, [messages]);
 
   useEffect(() => {
     // @ts-ignore
@@ -68,53 +55,34 @@ const Chat: React.FC = () => {
   }, [username]);
 
   if (messages.length === 0) {
-    messages = [
-      createWelcomeMessage(text, username)
-    ]
+    messages = [createWelcomeMessage(text, username)];
   }
 
-  messages = assembleActionsToMessages(messages, streaming)
-
-  const onInputHeightChanged = (height: number) => {
-    if (messageStackRef.current) {
-      messageStackRef.current.style.height = `calc(100vh - ${height + 26}px)`
-    }
-    if (stopBtnRef.current) {
-      stopBtnRef.current.style.bottom = `${height + 40}px`
-    }
-  }
+  messages = assembleActionsToMessages(messages, streaming);
 
   return (
     <>
-      <MessageStack ref={messageStackRef}>
+      <MessageStack ref={messageStackRef} className="message-stack hide-scrollbar">
         {messages.map((msg, index) => (
-          <MessageBubble
-            key={index}
-            {...msg}
-          />
+          <MessageBubble key={index} {...msg} />
         ))}
       </MessageStack>
-      <Input
+      <InputBox
         quickCommands={quickCommands}
-        onSend={(value: string) => {
-          if (actQuickCommand(value as QuickCommand)) {
-            return
+        onSend={(value: string, codeRef?: CodeReference) => {
+          if (actQuickCommand(value as QuickCommand, createUserMessage('', codeRef))) {
+            return;
           }
           // 如果用户输入了标签，则替换掉
           value = value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-          sendMessage(createUserMessage(value))
+          sendMessage(createUserMessage(value, codeRef));
         }}
-        onHeightChanged={onInputHeightChanged}
-      />
-      {streaming &&
-        <StopButton
-          ref={stopBtnRef}
-          onClick={interrupMessageStream}
-        />
-      }
+      >
+        {streaming && <StopButton onClick={interrupMessageStream} />}
+      </InputBox>
       <Tooltip id="tooltip" />
     </>
-  )
-}
+  );
+};
 
-export default Chat
+export default Chat;

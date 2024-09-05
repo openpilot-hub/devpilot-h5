@@ -1,30 +1,30 @@
-import styled from 'styled-components';
-import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import rangeParser from 'parse-numeric-range';
-import { Menu, Item, useContextMenu } from 'react-contexify';
-import jsx from 'react-syntax-highlighter/dist/cjs/languages/prism/jsx';
-import tsx from 'react-syntax-highlighter/dist/cjs/languages/prism/tsx';
-import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
+import { Item, Menu, useContextMenu } from 'react-contexify';
+import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
+import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
+import css from 'react-syntax-highlighter/dist/cjs/languages/prism/css';
 import java from 'react-syntax-highlighter/dist/cjs/languages/prism/java';
 import javascript from 'react-syntax-highlighter/dist/cjs/languages/prism/javascript';
-import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
-import css from 'react-syntax-highlighter/dist/cjs/languages/prism/css';
-import scss from 'react-syntax-highlighter/dist/cjs/languages/prism/scss';
-import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
-import markdown from 'react-syntax-highlighter/dist/cjs/languages/prism/markdown';
 import json from 'react-syntax-highlighter/dist/cjs/languages/prism/json';
+import jsx from 'react-syntax-highlighter/dist/cjs/languages/prism/jsx';
 import less from 'react-syntax-highlighter/dist/cjs/languages/prism/less';
-import stylus from 'react-syntax-highlighter/dist/cjs/languages/prism/stylus';
+import markdown from 'react-syntax-highlighter/dist/cjs/languages/prism/markdown';
+import python from 'react-syntax-highlighter/dist/cjs/languages/prism/python';
+import scss from 'react-syntax-highlighter/dist/cjs/languages/prism/scss';
 import sql from 'react-syntax-highlighter/dist/cjs/languages/prism/sql';
-import { oneDark } from 'react-syntax-highlighter/dist/cjs/styles/prism';
-import { oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import stylus from 'react-syntax-highlighter/dist/cjs/languages/prism/stylus';
+import tsx from 'react-syntax-highlighter/dist/cjs/languages/prism/tsx';
+import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
+import { oneDark, oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import styled from 'styled-components';
 import './Markdown.css';
 
-import IconButton from './IconButton';
-import { useTheme } from '../themes/themes';
-import { PluginCommand } from '../typings';
 import { useI18n } from '@/i18n';
+import { sendToPlugin } from '@/services/pluginBridge';
 import React from 'react';
+import { useTheme } from '../themes/themes';
+import { CodeReference, PluginCommand } from '../typings';
+import IconButton from './IconButton';
 import RAGFileList from './RAGFileList';
 
 // SyntaxHighlighter.registerLanguage('javascriptreact', jsx) // 不生效
@@ -60,9 +60,6 @@ const CodeEditor = styled.div`
   border-radius: 8px;
   margin: 1em 0;
   overflow: hidden;
-  .codeStyle {
-    padding-bottom: 0px !important;
-  }
 `;
 const CodeEditorActionBar = styled.div`
   display: flex;
@@ -101,7 +98,7 @@ const getContent = (content: string) => {
   return content;
 };
 
-const MarkdownComponents = () => {
+const MarkdownComponents = ({ codeRef }: { codeRef?: CodeReference }) => {
   const comp = {
     codeblockActions(action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }): void {
       throw new Error('Method not implemented.');
@@ -178,15 +175,41 @@ const MarkdownComponents = () => {
       return !inline ? (
         <CodeEditor onContextMenu={handleContextMenu}>
           <CodeEditorActionBar>
-            {lang && <LanguageTag>{lang}</LanguageTag>}
-            <IconButton icon="cursor" type="fade" title={text.codeblockActions.insertAtCursor} onClick={() => this.codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang)} />
+            <LanguageTag>
+              {codeRef ? (
+                <span
+                  style={{ cursor: 'pointer' }}
+                  // data-tooltip-id="tooltip"
+                  // data-tooltip-content={codeRef.fileUrl + codeRef.fileUrl}
+                  title={codeRef.fileUrl}
+                  onClick={() => {
+                    sendToPlugin(PluginCommand.GotoSelectedCode, codeRef);
+                  }}
+                >
+                  {codeRef.fileName}
+                </span>
+              ) : (
+                lang || ''
+              )}
+            </LanguageTag>
+            <IconButton
+              icon="cursor"
+              type="fade"
+              title={text.codeblockActions.insertAtCursor}
+              onClick={() => this.codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang)}
+            />
             <IconButton
               icon="replace"
               type="fade"
               title={text.codeblockActions.replaceSelectedCode}
               onClick={() => this.codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content), lang)}
             />
-            <IconButton icon="file" type="fade" title={text.codeblockActions.createFileWithCode} onClick={() => this.codeblockActions(PluginCommand.CreateNewFile, getContent(content), lang)} />
+            <IconButton
+              icon="file"
+              type="fade"
+              title={text.codeblockActions.createFileWithCode}
+              onClick={() => this.codeblockActions(PluginCommand.CreateNewFile, getContent(content), lang)}
+            />
             <IconButton
               icon="copy"
               type="fade"
@@ -198,7 +221,16 @@ const MarkdownComponents = () => {
               }}
             />
           </CodeEditorActionBar>
-          <SyntaxHighlighter style={syntaxTheme} language={lang} PreTag="div" className="codeStyle" showLineNumbers={true} wrapLines={hasMeta} useInlineStyles={true} lineProps={applyHighlights}>
+          <SyntaxHighlighter
+            style={syntaxTheme}
+            language={lang}
+            PreTag="div"
+            className="codeStyle"
+            showLineNumbers={true}
+            wrapLines={hasMeta}
+            useInlineStyles={true}
+            lineProps={applyHighlights}
+          >
             {content}
           </SyntaxHighlighter>
           <Menu id={'CODEBLOCK_CONTEXT_MENU'} theme={theme} animation={false}>

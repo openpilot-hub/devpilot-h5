@@ -1,20 +1,20 @@
+import { disposeHandler, receiveFromPlugin } from '@/services/pluginBridge';
 import { useEffect, useRef, useState } from 'react';
 import { BsFillSendFill } from 'react-icons/bs';
-import TextareaAutosize from 'react-textarea-autosize';
 import styled, { useTheme } from 'styled-components';
 import { useI18n } from '../i18n';
-import { QuickCommand } from '../typings';
+import { CodeReference, PluginCommand, QuickCommand } from '../typings';
+import FileReference from './FileReference';
 import IconButton from './IconButton';
 import RepoLabel from './RepoLabel';
+import TextareaAutosize from './TextareaAutosize';
 
 const InputContainer = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
   max-width: 1280px;
   padding: 10px;
   padding-bottom: 20px;
@@ -24,20 +24,17 @@ const InputContainer = styled.div`
   z-index: 1;
 `;
 
-const InputField = styled(TextareaAutosize)`
+const Textarea = styled(TextareaAutosize)`
   flex: 1;
-  padding: 5px 5px;
-  padding-right: 2em;
+  padding: 5px 2.5em 5px 8px;
   border: 1px solid #666;
   border-radius: 4px;
   background-color: ${(props) => props.theme.inputFieldBG};
   outline: none;
   resize: none;
-  min-height: 34px;
-  line-height: 24px;
-  overflow-y: hidden;
+  font-size: 13px;
   color: ${(props) => props.theme.text};
-  caret-color: ${(props) => props.theme.text};
+  caret-color: currentColor;
   &:focus-visible {
     outline: ${(props) => props.theme.inputFieldOutline};
   }
@@ -48,8 +45,8 @@ const Float = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  right: 15px;
-  height: 35px;
+  right: 16px;
+  height: 32px;
   align-self: stretch;
   overflow: visible;
   svg {
@@ -73,6 +70,7 @@ const CommandBox = styled.div`
 
 const CommandItem = styled.div<{ $highlight: boolean }>`
   background-color: ${(props) => (props.$highlight ? props.theme.highlightBG : 'transparent')};
+  color: ${(props) => (props.$highlight ? '#fff' : 'inherit')};
   cursor: pointer;
   padding: 5px 10px;
   font-family: monospace, consolas, courier-new, sans-serif;
@@ -106,19 +104,19 @@ const ShortcutHint = styled.div`
 `;
 
 interface InputProps {
-  onHeightChanged: (height: number) => void;
-  onSend: (value: string) => void;
+  onSend: (value: string, codeRef?: CodeReference) => void;
   quickCommands: string[];
+  children?: React.ReactNode;
 }
 
-export default function Input({ onSend, quickCommands, onHeightChanged }: InputProps) {
+export default function Input({ onSend, quickCommands, children }: InputProps) {
   const theme = useTheme();
   const [value, setValue] = useState('');
   const [prevValues, setPrevValues] = useState<string[]>([]);
   const [prevIndex, setPrevIndex] = useState<number>(0);
   const { text } = useI18n();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
+  const [codeRef, setCodeRef] = useState<CodeReference>();
   const [commandBoxVisible, setCommandBoxVisible] = useState(false);
   const [filteredCommands, setFilteredCommands] = useState(quickCommands);
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
@@ -146,17 +144,16 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
   }, [value, setSelectedCommandIndex]);
 
   useEffect(() => {
-    if (!textareaRef || !textareaRef.current) {
-      return;
-    }
-    if (value === undefined || !textareaRef.current) {
-      return;
-    }
-    onHeightChanged(textareaRef.current.scrollHeight);
-  }, [value]);
+    const handle = receiveFromPlugin(PluginCommand.ReferenceCode, (payload) => setCodeRef(payload));
+    return () => disposeHandler(handle);
+  }, []);
 
   const handleClearHistory = () => {
     onSend(QuickCommand.Clear);
+  };
+
+  const clearCodeRef = () => {
+    setCodeRef(undefined);
   };
 
   const handleSendMessage = () => {
@@ -165,7 +162,8 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
       setPrevValues(newPrevValues);
       setPrevIndex(newPrevValues.length);
       setValue('');
-      onSend(value.trim());
+      onSend(value.trim(), codeRef);
+      clearCodeRef();
     }
   };
 
@@ -245,20 +243,27 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
   };
 
   return (
-    <InputContainer>
-      <IconButton size="large" icon="clear" type="fade" onClick={handleClearHistory} />
-      <InputField
+    <InputContainer className="input-container">
+      <IconButton size="large" icon="clear" type="static" onClick={handleClearHistory} style={{ alignSelf: 'start' }} />
+      <Textarea
         ref={textareaRef}
         value={value}
+        className="hide-scrollbar"
         onKeyDown={handleKeyDown}
         onKeyUp={handleKeyUp}
         onBlur={() => setTimeout(() => setCommandBoxVisible(false), 200)}
         onChange={handleChange}
+        autoFocus
+        maxRow={10}
+        lineHeight={20}
+        style={codeRef ? { paddingBottom: 40 } : undefined}
+        placeholder={text.inputPlaceholder}
       />
-      <Float>
+      {codeRef && <FileReference codeRef={codeRef} onRemove={clearCodeRef} />}
+      <Float className="icon-send">
         <BsFillSendFill
           style={{
-            fontSize: '1.5em',
+            fontSize: 16,
             color: value.trim() ? theme.btnBG : theme.textFaint,
             cursor: value.trim() ? 'pointer' : 'not-allowed',
           }}
@@ -266,7 +271,7 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
         />
       </Float>
       {commandBoxVisible && (
-        <CommandBox>
+        <CommandBox className="command-box">
           {filteredCommands.map((command, index) => (
             <CommandItem
               key={command}
@@ -280,10 +285,11 @@ export default function Input({ onSend, quickCommands, onHeightChanged }: InputP
           ))}
         </CommandBox>
       )}
-      <ShortcutHint>
+      <ShortcutHint className="shortcut-hit">
         <RepoLabel onClick={onRepoLabelClick} />
         <span className="text">&nbsp;{text.shortcutHint}</span>
       </ShortcutHint>
+      {children}
     </InputContainer>
   );
 }

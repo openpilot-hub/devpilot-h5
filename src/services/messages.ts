@@ -1,44 +1,44 @@
-import { ChatMessage, ChatMessageAction, PluginCommand, QuickCommand } from "../typings";
 import { useCallback, useEffect, useState } from 'react';
-import { isStandardalone, disposeHandler, receiveFromPlugin, sendToPlugin } from "./pluginBridge";
-import { mockMessages } from "./mock";
-import { Lang, useI18n } from "../i18n";
+import { Lang, useI18n } from '../i18n';
+import { ChatMessage, ChatMessageAction, CodeReference, PluginCommand, QuickCommand } from '../typings';
+import { mockMessages } from './mock';
+import { disposeHandler, isStandardalone, receiveFromPlugin, sendToPlugin } from './pluginBridge';
 
 export function assembleActionsToMessages(messages: ChatMessage[], loading: boolean): ChatMessage[] {
-  const regen = (loading ? []: ['regenerate']) as ChatMessageAction[]
-  const del = (loading ? []: ['delete']) as ChatMessageAction[]
+  const regen = (loading ? [] : ['regenerate']) as ChatMessageAction[];
+  const del = (loading ? [] : ['delete']) as ChatMessageAction[];
   return messages.map((msg, index) => {
-    msg.actions = msg.actions ?? []
+    msg.actions = msg.actions ?? [];
     if (msg.role === 'assistant' && index === 0) {
       return {
         ...msg,
-        actions: []
-      }
+        actions: [],
+      };
     }
     if (msg.role === 'assistant') {
       if (index === messages.length - 1) {
         return {
           ...msg,
-          actions: ['like', 'dislike', 'copy', ...regen]
-        }
+          actions: ['like', 'dislike', 'copy', ...regen],
+        };
       } else {
         return {
           ...msg,
-          actions: ['like', 'dislike', 'copy']
-        }
+          actions: ['like', 'dislike', 'copy'],
+        };
       }
     }
     if (msg.role === 'user') {
       return {
         ...msg,
-        actions: ['copy', ...del]
-      }
+        actions: ['copy', ...del],
+      };
     }
-    return {...msg}
-  })
+    return { ...msg };
+  });
 }
 
-export const createUserMessage = (content: string, time?: number): ChatMessage => {
+export const createUserMessage = (content: string, codeRef?: CodeReference): ChatMessage => {
   if (content === QuickCommand.Clear) {
     return {
       id: Math.random().toString(36).substring(7),
@@ -47,10 +47,11 @@ export const createUserMessage = (content: string, time?: number): ChatMessage =
       role: 'divider',
       username: '',
       avatar: '',
-      time: time ?? Date.now(),
+      time: Date.now(),
       streaming: false,
-      actions: []
-    }
+      actions: [],
+      codeRef,
+    };
   }
   return {
     id: Math.random().toString(36).substring(7),
@@ -59,11 +60,12 @@ export const createUserMessage = (content: string, time?: number): ChatMessage =
     role: 'user',
     username: 'User',
     avatar: '',
-    time: time ?? Date.now(),
+    time: Date.now(),
     streaming: false,
-    actions: []
-  }
-}
+    actions: [],
+    codeRef,
+  };
+};
 
 export const createWelcomeMessage = (text: Lang, username: string): ChatMessage => {
   return {
@@ -75,9 +77,9 @@ export const createWelcomeMessage = (text: Lang, username: string): ChatMessage 
     avatar: '',
     time: Date.now(),
     streaming: false,
-    actions: []
-  }
-}
+    actions: [],
+  };
+};
 
 export const createAssistantMessage = (content: string, streaming: boolean = false): ChatMessage => {
   return {
@@ -89,9 +91,9 @@ export const createAssistantMessage = (content: string, streaming: boolean = fal
     avatar: '',
     time: Date.now(),
     streaming,
-    actions: []
-  }
-}
+    actions: [],
+  };
+};
 
 export const createDividerMessage = (): ChatMessage => {
   return {
@@ -103,37 +105,37 @@ export const createDividerMessage = (): ChatMessage => {
     avatar: '',
     time: Date.now(),
     streaming: false,
-    actions: []
-  }
-}
+    actions: [],
+  };
+};
 
 export function useMessages() {
-  const { text } = useI18n()
-  const [messages, setMessages] = useState<ChatMessage[]>([])
-  const mockMsgs = mockMessages(text)
+  const { text } = useI18n();
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const mockMsgs = mockMessages(text);
 
   useEffect(() => {
     if (isStandardalone()) {
-      setMessages(mockMsgs)
+      setMessages(mockMsgs);
     }
-  }, [text])
-  
-  const sendMessage = useCallback((newMessage: ChatMessage) => {
-    let newMessageStack = [...messages, newMessage]
-    setMessages(newMessageStack);
-    sendToPlugin(PluginCommand.AppendToConversation, newMessage)
-  }, [messages]);
+  }, [text]);
+
+  const sendMessage = useCallback(
+    (newMessage: ChatMessage) => {
+      let newMessageStack = [...messages, newMessage];
+      setMessages(newMessageStack);
+      sendToPlugin(PluginCommand.AppendToConversation, newMessage);
+    },
+    [messages],
+  );
 
   const interruptChatStream = useCallback(() => {
-    sendToPlugin(PluginCommand.InterruptChatStream, {})
+    sendToPlugin(PluginCommand.InterruptChatStream, {});
   }, []);
 
   useEffect(() => {
-    const handle = receiveFromPlugin(
-      PluginCommand.RenderChatConversation,
-      (messages) => setMessages([...messages])
-    )
-    return () => disposeHandler(handle)
-  }, [])
-  return {messages, sendMessage, interrupMessageStream: interruptChatStream}
+    const handle = receiveFromPlugin(PluginCommand.RenderChatConversation, (messages) => setMessages([...messages]));
+    return () => disposeHandler(handle);
+  }, []);
+  return { messages, sendMessage, interrupMessageStream: interruptChatStream };
 }

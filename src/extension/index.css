@@ -19,10 +19,14 @@ a:hover {
 }
 
 * {
-  margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
+
+*:not(h1, h2, h3, h4, h5, h6) {
+  margin: 0;
+}
+
 body {
   min-width: 204px;
   min-height: 100vh;
@@ -31,11 +35,6 @@ body {
   padding: 0 !important; /* Override vscode default body padding */
   font-size: 13px;
   line-height: 1.5;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
 }
 
 button {
@@ -68,10 +67,23 @@ button:focus-visible {
     color: #213547;
     background-color: #ffffff;
   }
-  a:hover {
+  /* a:hover {
     color: #747bff;
-  }
+  } */
   button {
     background-color: #f9f9f9;
   }
+}
+
+.hide-scrollbar {
+  scrollbar-color: auto;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+textarea::-webkit-input-placeholder {
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

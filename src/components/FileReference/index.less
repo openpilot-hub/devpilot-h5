@@ -1,0 +1,25 @@
+.file-reference {
+  display: inline-flex;
+  align-items: center;
+  border: solid 1px #666;
+  line-height: 20px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  max-width: 100%;
+
+  & > div {
+    flex: 1;
+    white-space: pre;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &-holder {
+    position: absolute;
+    left: 40px;
+    bottom: 21px;
+    width: calc(100% - 58px);
+    padding: 6px 0 6px 4px;
+  }
+}
