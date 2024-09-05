@@ -1,4 +1,4 @@
-import { Lang } from ".";
+import { Lang } from '.';
 
 const lang: Lang = {
   ragFileListTitle: '上下文',
@@ -13,15 +13,16 @@ const lang: Lang = {
   likeMsg: '赞',
   dislikeMsg: '踩',
   errorMessage: {
-    needLogin: '您好，我是DevPilot，您的AI代码助理。登录并开始AI之旅吧！'
+    needLogin: '您好，我是DevPilot，您的AI代码助理。登录并开始AI之旅吧！',
   },
   codeblockActions: {
-    insertAtCursor: "在光标处插入",
-    replaceSelectedCode: "替换所选代码",
-    createFileWithCode: "使用代码创建文件",
-    copyToClipboard: "复制到剪贴板"
+    insertAtCursor: '在光标处插入',
+    replaceSelectedCode: '替换所选代码',
+    createFileWithCode: '使用代码创建文件',
+    copyToClipboard: '复制到剪贴板',
   },
-  shortcutHint: 'Shift + Enter 换行 | "/" 命令',
+  inputPlaceholder: "提问或输入 '/' 查看命令",
+  shortcutHint: 'Shift + Enter 换行',
   repoEmbedded: '可使用仓库向量增强检索, 使用@repo对整个仓库进行提问',
   applyRepoEmbedding: '该仓库还未向量化，请先申请仓库向量化',
   welcome: `欢迎您 {{USER}}! 很高兴您的使用， 我是您值得信赖的助理，随时准备帮助您更有效地完成任务。
@@ -34,7 +35,7 @@ const lang: Lang = {
 
 [3. 生成所选代码注释](#/comment)
 
-作为一名人工智能助手，我努力提供最好的帮助，但是请记住，偶尔可能会出现意外或错误，仔细检查任何生成的代码或建议总是一个好主意。`
-}
+作为一名人工智能助手，我努力提供最好的帮助，但是请记住，偶尔可能会出现意外或错误，仔细检查任何生成的代码或建议总是一个好主意。`,
+};
 
 export default lang;

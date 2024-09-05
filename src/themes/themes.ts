@@ -1,7 +1,7 @@
 import { usePluginState } from '../services/pluginBridge';
 
 export const lightTheme = {
-  text: '#363537',
+  text: 'var(--vscode-foreground, #363537)',
   textFaint: '#999',
   background: '#F0F0F0',
   border: 'solid 1px #f2f2f2',
@@ -12,7 +12,7 @@ export const lightTheme = {
   inputFieldOutline: '#535bf2 solid 1px',
   btnBG: '#535bf2',
   btnText: '#FFF',
-  primary: '#48a4ff',
+  primary: 'var(--vscode-textLink-foreground, #3794ff)',
   codeBG: '#F0F0F0',
   highlightBG: '#48a4ff',
   hoverBG: '#d1e8ff',
@@ -20,7 +20,7 @@ export const lightTheme = {
   ragFileListBG: '#f3f3f3',
   ragFileListTitleBG: '#f3f3f3',
   ragFileListItemFG: '#0884ff',
-  ragFileListItemHoverFG: '#48a4ff'
+  ragFileListItemHoverFG: '#48a4ff',
 };
 
 export const darkTheme = {
@@ -35,7 +35,7 @@ export const darkTheme = {
   inputFieldOutline: '#999 solid 1px',
   btnBG: '#535bf2',
   btnText: '#FFF',
-  primary: '#48a4ff',
+  primary: 'var(--vscode-textLink-foreground, #3794ff)',
   codeBG: '#282c34',
   highlightBG: '#48a4ff',
   hoverBG: '#295582',
@@ -43,7 +43,7 @@ export const darkTheme = {
   ragFileListBG: '#191919',
   ragFileListTitleBG: '#191919',
   ragFileListItemFG: '#0884ff',
-  ragFileListItemHoverFG: '#48a4ff'
+  ragFileListItemHoverFG: '#48a4ff',
 };
 
 export function useTheme() {

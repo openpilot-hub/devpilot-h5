@@ -1,7 +1,6 @@
-import { defineConfig } from 'vite';
-import { resolve } from 'path';
 import react from '@vitejs/plugin-react-swc';
-import proxy from './proxy.cjs';
+import { resolve } from 'path';
+import { defineConfig } from 'vite';
 
 export default defineConfig({
   plugins: [react()],
@@ -17,5 +16,4 @@ export default defineConfig({
       '@': resolve(__dirname, '../src'),
     },
   },
-  server: { proxy },
 });

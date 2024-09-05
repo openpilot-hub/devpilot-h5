@@ -1,11 +1,28 @@
 .markdown-renderer {
   line-height: 1.8;
-  ul,ol {
+  ul,
+  ol {
     margin-left: 1.5rem;
   }
   .codeStyle {
     margin: 0 !important;
     border-top-right-radius: 0 !important;
     border-top-left-radius: 0 !important;
+
+    &::-webkit-scrollbar {
+      width: 4px;
+      height: 6px;
+      background-color: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      width: 4px;
+      border-radius: 4px;
+      background-color: transparent;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+      background-color: #363537;
+    }
   }
 }

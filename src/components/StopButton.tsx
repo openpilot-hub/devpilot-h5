@@ -1,7 +1,7 @@
-import styled, { keyframes } from "styled-components";
-import { FaRegStopCircle } from "react-icons/fa";
-import React, { forwardRef } from 'react';
-import { useI18n } from "../i18n";
+import { forwardRef } from 'react';
+import { FaRegStopCircle } from 'react-icons/fa';
+import styled, { keyframes } from 'styled-components';
+import { useI18n } from '../i18n';
 
 const sineFadeAnimation = keyframes`
   0% {
@@ -14,10 +14,11 @@ const sineFadeAnimation = keyframes`
 
 const StopButtonContainer = styled.div`
   position: absolute;
-  bottom: 70px;
+  top: -48px;
+  left: 0;
   width: 100%;
   z-index: 1;
-`
+`;
 
 const StopButton = styled.button`
   position: relative;
@@ -32,7 +33,7 @@ const StopButton = styled.button`
   border-radius: 200px;
   background: none;
   overflow: hidden;
-  color: ${props => props.theme.text};
+  color: ${(props) => props.theme.text};
   height: 40px;
   box-shadow: 0 3px 5px #0002;
   border: 1px solid transparent;
@@ -43,7 +44,7 @@ const StopButton = styled.button`
   &:focus {
     outline: 2px solid #646cff;
   }
-`
+`;
 
 const StopButtonBackground = styled.div`
   position: absolute;
@@ -53,11 +54,11 @@ const StopButtonBackground = styled.div`
   width: 120px;
   height: 60px;
   animation: ${sineFadeAnimation} 0.6s cubic-bezier(0.65, 0, 0.35, 1) infinite alternate;
-  background-image: ${props => props.theme.stopStreamBG};
-`
+  background-image: ${(props) => props.theme.stopStreamBG};
+`;
 
-export default forwardRef<HTMLDivElement, {onClick: () => void}>((props, ref) => {
-  const {text} = useI18n()
+export default forwardRef<HTMLDivElement, { onClick: () => void }>((props, ref) => {
+  const { text } = useI18n();
   return (
     <StopButtonContainer {...props} ref={ref}>
       <StopButton>
@@ -65,5 +66,5 @@ export default forwardRef<HTMLDivElement, {onClick: () => void}>((props, ref) =>
         <FaRegStopCircle /> {text.stop}
       </StopButton>
     </StopButtonContainer>
-  )
-})
+  );
+});

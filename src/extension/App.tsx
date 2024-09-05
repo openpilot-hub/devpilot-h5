@@ -1,15 +1,17 @@
-import { ThemeProvider } from 'styled-components';
-import { lightTheme, darkTheme, useTheme } from '../themes/themes';
 import './App.css';
-import Chat from '../pages/Chat';
-import { usePluginState } from '@/services/pluginBridge';
-import NeedLogin from '@/pages/NeedLogin';
-import { useEffect } from 'react';
+
 import ErrorBoundary from '@/components/ErrorBoundary';
+import NeedLogin from '@/pages/NeedLogin';
+import { usePluginState } from '@/services/pluginBridge';
+import { useEffect } from 'react';
+import { ThemeProvider } from 'styled-components';
+import Chat from '../pages/Chat';
+import { darkTheme, lightTheme, useTheme } from '../themes/themes';
 
 function App() {
   const loggedIn = usePluginState('loggedIn');
   const theme = useTheme();
+  // const theme = 'dark';
 
   useEffect(() => {
     if (theme === 'light') {

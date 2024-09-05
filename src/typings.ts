@@ -23,6 +23,7 @@ export enum PluginCommand {
   CheckCodePerformance = 'CheckCodePerformance',
   PresentCodeEmbeddedState = 'PresentCodeEmbeddedState',
   OpenFile = 'OpenFile',
+  ReferenceCode = 'ReferenceCode',
 }
 
 export enum QuickCommand {
@@ -31,7 +32,7 @@ export enum QuickCommand {
   Explain = '/explain',
   Comment = '/comment',
   Test = '/test',
-  Performance = '/performance',
+  // Performance = '/performance',
 }
 
 export interface PluginMessage {
@@ -40,10 +41,16 @@ export interface PluginMessage {
 }
 
 export interface CodeReference {
+  languageId: string;
   fileUrl: string;
   fileName: string;
+  sourceCode?: string;
+  // document: string;
   selectedStartLine: number;
+  selectedStartColumn: number;
   selectedEndLine: number;
+  selectedEndColumn: number;
+  visible: boolean;
 }
 
 export type ChatMessageAction = 'like' | 'dislike' | 'delete' | 'regenerate' | 'copy';
