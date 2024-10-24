@@ -60,8 +60,8 @@ const StopButtonBackground = styled.div`
 export default forwardRef<HTMLDivElement, { onClick: () => void }>((props, ref) => {
   const { text } = useI18n();
   return (
-    <StopButtonContainer {...props} ref={ref}>
-      <StopButton>
+    <StopButtonContainer {...props} onClick={undefined} ref={ref}>
+      <StopButton onClick={props.onClick}>
         <StopButtonBackground />
         <FaRegStopCircle /> {text.stop}
       </StopButton>

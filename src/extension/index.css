@@ -82,8 +82,18 @@ button:focus-visible {
   }
 }
 
-textarea::-webkit-input-placeholder {
-  white-space: pre;
+.flex-1 {
+  flex: 1;
+}
+
+.ellipsis {
+  white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* textarea::-webkit-input-placeholder {
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+} */

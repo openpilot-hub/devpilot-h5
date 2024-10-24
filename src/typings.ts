@@ -66,6 +66,15 @@ export interface ChatMessage {
   streaming: boolean;
   codeRef?: CodeReference;
   actions: Array<ChatMessageAction>;
+  recall?: IRecall;
+}
+
+export interface IRecall {
+  steps: {
+    status: 'loading' | 'done' | 'terminated';
+  }[];
+  remoteRefs?: CodeReference[];
+  localRefs?: CodeReference[];
 }
 
 export type PluginMessageCallback = (payload: any) => void;

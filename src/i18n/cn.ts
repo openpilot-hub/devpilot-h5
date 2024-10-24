@@ -21,6 +21,13 @@ const lang: Lang = {
     createFileWithCode: '使用代码创建文件',
     copyToClipboard: '复制到剪贴板',
   },
+  recall: {
+    stepsTitle: '思考过程',
+    steps: ['分析', '检索', '生成'],
+    stepsDesc: ['分析输入内容', '查找关联信息', '汇总生成答案'],
+    resultTitle: '搜索结果',
+    resultDesc: '基于以下内容整理回答',
+  },
   inputPlaceholder: "提问或输入 '/' 查看命令",
   shortcutHint: 'Shift + Enter 换行',
   repoEmbedded: '可使用仓库向量增强检索, 使用@repo对整个仓库进行提问',

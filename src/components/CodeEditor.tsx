@@ -1,5 +1,5 @@
-import rangeParser from 'parse-numeric-range';
 import { Item, Menu, useContextMenu } from 'react-contexify';
+import { LuMinusSquare, LuPlusSquare } from 'react-icons/lu';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
 import css from 'react-syntax-highlighter/dist/cjs/languages/prism/css';
@@ -21,11 +21,12 @@ import './Markdown.css';
 
 import { useI18n } from '@/i18n';
 import { sendToPlugin } from '@/services/pluginBridge';
-import React from 'react';
-import { useTheme } from '../themes/themes';
-import { CodeReference, PluginCommand } from '../typings';
+import { useTheme } from '@/themes/themes';
+import React, { useCallback, useRef, useState } from 'react';
+import { ChatMessage, IRecall, PluginCommand } from '../typings';
 import IconButton from './IconButton';
 import RAGFileList from './RAGFileList';
+import Thinking from './Thinking';
 
 // SyntaxHighlighter.registerLanguage('javascriptreact', jsx) // 不生效
 SyntaxHighlighter.registerLanguage('jsx', jsx);
@@ -50,10 +51,10 @@ function replaceLast(str: string, occurence: string, replacement: string) {
   return str.replace(new RegExp(`${occurence}$`), replacement);
 }
 
-function skip<T extends object, K extends keyof T>(props: T, key: K): Omit<T, K> {
-  const { [key]: _, ...nextProps } = props;
-  return nextProps as Omit<T, K>;
-}
+// function skip<T extends object, K extends keyof T>(props: T, key: K): Omit<T, K> {
+//   const { [key]: _, ...nextProps } = props;
+//   return nextProps as Omit<T, K>;
+// }
 
 const CodeEditor = styled.div`
   border: ${(props) => props.theme.border};
@@ -78,6 +79,15 @@ const LanguageTag = styled.div`
   color: ${(props) => props.theme.text};
 `;
 
+const Lines = styled.span`
+  padding-top: 2px;
+  font-weight: normal;
+  margin-right: 5px;
+  line-height: 1;
+  flex-shrink: 0;
+  color: ${(props) => props.theme.textFaint};
+`;
+
 const getSelectedText = () => {
   const selection = document.getSelection();
   if (selection) {
@@ -98,20 +108,238 @@ const getContent = (content: string) => {
   return content;
 };
 
-const MarkdownComponents = ({ codeRef }: { codeRef?: CodeReference }) => {
+const linkActions = (href: string): boolean => {
+  switch (href) {
+    case '#/fix':
+      sendToPlugin(PluginCommand.FixCode);
+      return true;
+    case '#/explain':
+      sendToPlugin(PluginCommand.ExplainCode);
+      return true;
+    case '#/comment':
+      sendToPlugin(PluginCommand.CommentCode);
+      return true;
+  }
+  return false;
+};
+
+function Opener({ index, opens, onClick }: { index: number; opens: boolean[]; onClick: (e: boolean[]) => void }) {
+  return (
+    <div style={{ paddingLeft: 8, fontSize: 14, lineHeight: 0 }}>
+      {opens[index] !== false ? (
+        <LuMinusSquare
+          onClick={() => {
+            opens[index] = false;
+            onClick([...opens]);
+          }}
+        />
+      ) : (
+        <LuPlusSquare
+          onClick={() => {
+            opens[index] = true;
+            onClick([...opens]);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+const MarkdownComponents = ({ chatMessage }: { chatMessage: ChatMessage }) => {
+  // TODO: use context to get current chatMessage
+  const messageRef = useRef<ChatMessage>(chatMessage);
+  const { text } = useI18n();
+  const theme = useTheme();
+
+  const syntaxTheme = theme === 'dark' ? oneDark : oneLight;
+
+  messageRef.current = chatMessage;
+
+  const div = useCallback((params: any) => {
+    const { recall, id, role } = messageRef.current;
+    const { node, className, ...props } = params;
+    const [opens, setOpens] = useState<boolean[]>([]);
+
+    if (className === 'rag-files' && params.children) {
+      const repo = props['data-repo'];
+      return (
+        <RAGFileList
+          files={params.children.map((child: any) => child.props.children?.[0])}
+          clickAction={(file: string) => {
+            sendToPlugin(PluginCommand.OpenFile, { repo, content: file, messageId: id, lang: 'text', role });
+          }}
+        />
+      );
+    } else if (className === 'thinking-process') {
+      const refs = [...(recall!.localRefs || []), ...(recall!.remoteRefs || [])];
+      return (
+        <Thinking data={recall as IRecall} count={refs.length}>
+          {refs.map((item, index) => {
+            const open = opens[index] !== false;
+            return (
+              <CodeEditor key={index}>
+                <CodeEditorActionBar style={{ borderBottom: open ? undefined : 0 }}>
+                  <Opener index={index} opens={opens} onClick={setOpens} />
+                  <LanguageTag>
+                    {item.fileName ? (
+                      <span
+                        style={{ cursor: 'pointer' }}
+                        title={item.fileUrl}
+                        onClick={() => {
+                          sendToPlugin(PluginCommand.GotoSelectedCode, item);
+                        }}
+                      >
+                        {item.fileName}
+                      </span>
+                    ) : (
+                      item.languageId || ''
+                    )}
+                  </LanguageTag>
+                  {item.selectedEndLine && (
+                    <Lines>
+                      Lines {item.selectedStartLine + 1}-{item.selectedEndLine + 1}
+                    </Lines>
+                  )}
+                </CodeEditorActionBar>
+                {open && (
+                  <SyntaxHighlighter
+                    style={syntaxTheme}
+                    language={item.languageId}
+                    PreTag="div"
+                    className="codeStyle"
+                    showLineNumbers={true}
+                    useInlineStyles={true}
+                  >
+                    {item.sourceCode!}
+                  </SyntaxHighlighter>
+                )}
+              </CodeEditor>
+            );
+          })}
+          {params.children}
+        </Thinking>
+      );
+    } else {
+      return React.createElement('div', props, params.children);
+    }
+  }, []);
+
+  const code = useCallback(({ node, className, inline, ...props }: any) => {
+    const { codeRef, id, role } = messageRef.current;
+    const hasLang = /language-(\w+)/.exec(className || '');
+    const lang = hasLang ? hasLang[1] : '';
+    const content = replaceLast(props.children[0], '\n', '');
+    const { show, hideAll } = useContextMenu({ id: 'CODEBLOCK_CONTEXT_MENU' });
+
+    function handleContextMenu(event: any) {
+      event.stopPropagation();
+      show({ event, props: { key: 'value' } });
+    }
+
+    const codeblockActions = (action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }): void => {
+      sendToPlugin(action, { ...extra, content, messageId: id, lang, role });
+    };
+
+    return !inline ? (
+      <CodeEditor onContextMenu={handleContextMenu}>
+        <CodeEditorActionBar>
+          <LanguageTag className="lang-tag">
+            {codeRef ? (
+              <span
+                style={{ cursor: 'pointer' }}
+                // data-tooltip-id="tooltip"
+                // data-tooltip-content={codeRef.fileUrl + codeRef.fileUrl}
+                title={codeRef.fileUrl}
+                onClick={() => {
+                  sendToPlugin(PluginCommand.GotoSelectedCode, codeRef);
+                }}
+              >
+                {codeRef.fileName}
+              </span>
+            ) : (
+              lang || ''
+            )}
+          </LanguageTag>
+          <IconButton
+            icon="cursor"
+            type="fade"
+            title={text.codeblockActions.insertAtCursor}
+            onClick={() => codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang)}
+          />
+          <IconButton
+            icon="replace"
+            type="fade"
+            title={text.codeblockActions.replaceSelectedCode}
+            onClick={() => codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content), lang)}
+          />
+          <IconButton
+            icon="file"
+            type="fade"
+            title={text.codeblockActions.createFileWithCode}
+            onClick={() => codeblockActions(PluginCommand.CreateNewFile, getContent(content), lang)}
+          />
+          <IconButton
+            icon="copy"
+            type="fade"
+            title={text.codeblockActions.copyToClipboard}
+            onClick={() => {
+              let _content = getContent(content);
+              navigator?.clipboard?.writeText(_content);
+              codeblockActions(PluginCommand.CopyCode, _content, lang);
+            }}
+          />
+        </CodeEditorActionBar>
+        <SyntaxHighlighter
+          style={syntaxTheme}
+          language={lang}
+          PreTag="div"
+          className="codeStyle"
+          showLineNumbers={true}
+          useInlineStyles={true}
+          // wrapLines={hasMeta}
+          // lineProps={applyHighlights}
+        >
+          {content}
+        </SyntaxHighlighter>
+        <Menu id={'CODEBLOCK_CONTEXT_MENU'} theme={theme} animation={false}>
+          <Item
+            id="text.codeblockActions.replaceSelectedCode"
+            onClick={() => {
+              codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content), lang);
+              hideAll();
+            }}
+          >
+            {text.codeblockActions.replaceSelectedCode}
+          </Item>
+          <Item
+            id="text.codeblockActions.insertAtCursor"
+            onClick={() => {
+              codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang);
+              hideAll();
+            }}
+          >
+            {text.codeblockActions.insertAtCursor}
+          </Item>
+        </Menu>
+      </CodeEditor>
+    ) : (
+      <code className={className} {...props} />
+    );
+  }, []);
+
   const comp = {
-    codeblockActions(action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }): void {
-      throw new Error('Method not implemented.');
-    },
-    linkActions(href: string): boolean {
-      throw new Error('Method not implemented.');
-    },
+    // codeblockActions(action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }): void {
+    //   throw new Error('Method not implemented.');
+    // },
+    // linkActions(href: string): boolean {
+    //   throw new Error('Method not implemented.');
+    // },
     a({ node, ...props }: any) {
       return (
         <a
           {...props}
           onClick={(event) => {
-            const preventDefault = this.linkActions(node.properties.href);
+            const preventDefault = linkActions(node.properties.href);
             if (preventDefault) {
               event.preventDefault();
               event.stopPropagation();
@@ -120,149 +348,13 @@ const MarkdownComponents = ({ codeRef }: { codeRef?: CodeReference }) => {
         />
       );
     },
-    div(params: any) {
-      const { node, className, ...props } = params;
-      if (className === 'rag-files' && params.children) {
-        const repo = props['data-repo'];
-        return (
-          <RAGFileList
-            files={params.children.map((child: any) => child.props.children?.[0])}
-            clickAction={(file: string) => {
-              this.codeblockActions(PluginCommand.OpenFile, file, 'text', { repo });
-            }}
-          />
-        );
-      } else {
-        return React.createElement('div', props, params.children);
-      }
-    },
-    code({ node, className, ...props }: any) {
-      const hasLang = /language-(\w+)/.exec(className || '');
-      const lang = hasLang ? hasLang[1] : '';
-      const hasMeta = node?.data?.meta;
-      const inline = node.properties.inline === 'true';
-
-      const applyHighlights: object = (applyHighlights: number) => {
-        if (hasMeta) {
-          const RE = /{([\d,-]+)}/;
-          const metadata = node.data.meta?.replace(/\s/g, '');
-          const strlineNumbers = RE.test(metadata) ? RE.exec(metadata)![1] : '0';
-          const highlightLines = rangeParser(strlineNumbers);
-          const highlight = highlightLines;
-          const data = highlight.includes(applyHighlights) ? 'highlight' : null;
-          return { data };
-        } else {
-          return {};
-        }
-      };
-
-      const theme = useTheme();
-      const { text } = useI18n();
-      const syntaxTheme = theme === 'dark' ? oneDark : oneLight;
-      const content = replaceLast(props.children[0], '\n', '');
-      const { show, hideAll } = useContextMenu({ id: 'CODEBLOCK_CONTEXT_MENU' });
-
-      function handleContextMenu(event: any) {
-        event.stopPropagation();
-        show({
-          event,
-          props: {
-            key: 'value',
-          },
-        });
-      }
-
-      return !inline ? (
-        <CodeEditor onContextMenu={handleContextMenu}>
-          <CodeEditorActionBar>
-            <LanguageTag>
-              {codeRef ? (
-                <span
-                  style={{ cursor: 'pointer' }}
-                  // data-tooltip-id="tooltip"
-                  // data-tooltip-content={codeRef.fileUrl + codeRef.fileUrl}
-                  title={codeRef.fileUrl}
-                  onClick={() => {
-                    sendToPlugin(PluginCommand.GotoSelectedCode, codeRef);
-                  }}
-                >
-                  {codeRef.fileName}
-                </span>
-              ) : (
-                lang || ''
-              )}
-            </LanguageTag>
-            <IconButton
-              icon="cursor"
-              type="fade"
-              title={text.codeblockActions.insertAtCursor}
-              onClick={() => this.codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang)}
-            />
-            <IconButton
-              icon="replace"
-              type="fade"
-              title={text.codeblockActions.replaceSelectedCode}
-              onClick={() => this.codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content), lang)}
-            />
-            <IconButton
-              icon="file"
-              type="fade"
-              title={text.codeblockActions.createFileWithCode}
-              onClick={() => this.codeblockActions(PluginCommand.CreateNewFile, getContent(content), lang)}
-            />
-            <IconButton
-              icon="copy"
-              type="fade"
-              title={text.codeblockActions.copyToClipboard}
-              onClick={() => {
-                let _content = getContent(content);
-                navigator?.clipboard?.writeText(_content);
-                this.codeblockActions(PluginCommand.CopyCode, _content, lang);
-              }}
-            />
-          </CodeEditorActionBar>
-          <SyntaxHighlighter
-            style={syntaxTheme}
-            language={lang}
-            PreTag="div"
-            className="codeStyle"
-            showLineNumbers={true}
-            wrapLines={hasMeta}
-            useInlineStyles={true}
-            lineProps={applyHighlights}
-          >
-            {content}
-          </SyntaxHighlighter>
-          <Menu id={'CODEBLOCK_CONTEXT_MENU'} theme={theme} animation={false}>
-            <Item
-              id="text.codeblockActions.replaceSelectedCode"
-              onClick={() => {
-                this.codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content), lang);
-                hideAll();
-              }}
-            >
-              {text.codeblockActions.replaceSelectedCode}
-            </Item>
-            <Item
-              id="text.codeblockActions.insertAtCursor"
-              onClick={() => {
-                this.codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang);
-                hideAll();
-              }}
-            >
-              {text.codeblockActions.insertAtCursor}
-            </Item>
-          </Menu>
-        </CodeEditor>
-      ) : (
-        <code className={className} {...skip(props, 'inline')} />
-      );
-    },
+    div,
+    code,
   };
 
-  comp.code = comp.code.bind(comp);
-  comp.div = comp.div.bind(comp);
-  comp.a = comp.a.bind(comp);
+  // comp.code = comp.code.bind(comp);
+  // comp.div = comp.div.bind(comp);
+  // comp.a = comp.a.bind(comp);
 
   return comp;
 };

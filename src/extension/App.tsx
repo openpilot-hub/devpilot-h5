@@ -1,3 +1,4 @@
+import '@/assets/styles/animation.less';
 import './App.css';
 
 import ErrorBoundary from '@/components/ErrorBoundary';
