@@ -29,9 +29,8 @@ const actQuickCommand = (value: QuickCommand, payload?: ChatMessage) => {
   if (quickCommandMapping[value]) {
     sendToPlugin(quickCommandMapping[value], payload);
     return true;
-  } else {
-    return false;
   }
+  return false;
 };
 
 const Chat: React.FC = () => {
@@ -54,9 +53,11 @@ const Chat: React.FC = () => {
     window.__SERAPH_HAS_MONITOR__?.setUser({ userId: username });
   }, [username]);
 
-  if (messages.length === 0) {
+  if (!messages.length) {
     messages = [createWelcomeMessage(text, username)];
   }
+
+  console.log('current messages =>', messages);
 
   messages = assembleActionsToMessages(messages, streaming);
 
@@ -64,12 +65,14 @@ const Chat: React.FC = () => {
     <>
       <MessageStack ref={messageStackRef} className="message-stack hide-scrollbar">
         {messages.map((msg, index) => (
-          <MessageBubble key={index} {...msg} />
+          <MessageBubble key={msg.id + String(index)} {...msg} />
         ))}
       </MessageStack>
       <InputBox
+        disabled={streaming}
         quickCommands={quickCommands}
         onSend={(value: string, codeRef?: CodeReference) => {
+          if (streaming) return;
           if (actQuickCommand(value as QuickCommand, createUserMessage('', codeRef))) {
             return;
           }

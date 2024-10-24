@@ -1,13 +1,12 @@
 import { disposeHandler, receiveFromPlugin } from '@/services/pluginBridge';
 import { useEffect, useRef, useState } from 'react';
 import { BsFillSendFill } from 'react-icons/bs';
+import TextareaAutosize from 'react-textarea-autosize';
 import styled, { useTheme } from 'styled-components';
 import { useI18n } from '../i18n';
 import { CodeReference, PluginCommand, QuickCommand } from '../typings';
 import FileReference from './FileReference';
 import IconButton from './IconButton';
-import RepoLabel from './RepoLabel';
-import TextareaAutosize from './TextareaAutosize';
 
 const InputContainer = styled.div`
   position: relative;
@@ -26,7 +25,7 @@ const InputContainer = styled.div`
 
 const Textarea = styled(TextareaAutosize)`
   flex: 1;
-  padding: 5px 2.5em 5px 8px;
+  padding: 8px 2.5em 8px 8px;
   border: 1px solid #666;
   border-radius: 4px;
   background-color: ${(props) => props.theme.inputFieldBG};
@@ -35,6 +34,11 @@ const Textarea = styled(TextareaAutosize)`
   font-size: 13px;
   color: ${(props) => props.theme.text};
   caret-color: currentColor;
+  line-height: 20px;
+  &[disabled] {
+    color: ${(props) => props.theme.inputFieldDisabledForground};
+    cursor: not-allowed;
+  }
   &:focus-visible {
     outline: ${(props) => props.theme.inputFieldOutline};
   }
@@ -107,9 +111,10 @@ interface InputProps {
   onSend: (value: string, codeRef?: CodeReference) => void;
   quickCommands: string[];
   children?: React.ReactNode;
+  disabled?: boolean;
 }
 
-export default function Input({ onSend, quickCommands, children }: InputProps) {
+export default function Input({ onSend, quickCommands, children, disabled }: InputProps) {
   const theme = useTheme();
   const [value, setValue] = useState('');
   const [prevValues, setPrevValues] = useState<string[]>([]);
@@ -121,12 +126,12 @@ export default function Input({ onSend, quickCommands, children }: InputProps) {
   const [filteredCommands, setFilteredCommands] = useState(quickCommands);
   const [selectedCommandIndex, setSelectedCommandIndex] = useState(0);
 
-  const onRepoLabelClick = () => {
-    if (textareaRef.current) {
-      textareaRef.current.focus();
-      textareaRef.current.value = '@repo ';
-    }
-  };
+  // const onRepoLabelClick = () => {
+  //   if (textareaRef.current) {
+  //     textareaRef.current.focus();
+  //     textareaRef.current.value = '@repo ';
+  //   }
+  // };
 
   useEffect(() => {
     const newFilteredCommands = quickCommands.filter((cmd) => cmd.startsWith(value));
@@ -247,6 +252,7 @@ export default function Input({ onSend, quickCommands, children }: InputProps) {
       <IconButton size="large" icon="clear" type="static" onClick={handleClearHistory} style={{ alignSelf: 'start' }} />
       <Textarea
         ref={textareaRef}
+        disabled={disabled}
         value={value}
         className="hide-scrollbar"
         onKeyDown={handleKeyDown}
@@ -254,8 +260,7 @@ export default function Input({ onSend, quickCommands, children }: InputProps) {
         onBlur={() => setTimeout(() => setCommandBoxVisible(false), 200)}
         onChange={handleChange}
         autoFocus
-        maxRow={10}
-        lineHeight={20}
+        maxRows={10}
         style={codeRef ? { paddingBottom: 40 } : undefined}
         placeholder={text.inputPlaceholder}
       />
@@ -286,8 +291,9 @@ export default function Input({ onSend, quickCommands, children }: InputProps) {
         </CommandBox>
       )}
       <ShortcutHint className="shortcut-hit">
-        <RepoLabel onClick={onRepoLabelClick} />
-        <span className="text">&nbsp;{text.shortcutHint}</span>
+        {/* <RepoLabel onClick={onRepoLabelClick} /> */}
+        <span className="text">{text.shortcutHint}</span>
+        {/* <span className="text">&nbsp;{text.shortcutHint}</span> */}
       </ShortcutHint>
       {children}
     </InputContainer>

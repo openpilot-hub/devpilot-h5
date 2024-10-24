@@ -1,5 +1,7 @@
 .markdown-renderer {
   line-height: 1.8;
+  word-break: break-all;
+
   ul,
   ol {
     margin-left: 1.5rem;

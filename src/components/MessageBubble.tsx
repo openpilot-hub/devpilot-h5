@@ -9,7 +9,7 @@ import { useI18n } from '../i18n';
 import { sendToPlugin } from '../services/pluginBridge';
 import { ChatMessage, PluginCommand } from '../typings';
 import CloseButton from './CloseButton';
-import CodeReference from './CodeReference';
+import CodeRef from './CodeReference';
 import ErrorBoundary from './ErrorBoundary';
 import IconButton from './IconButton';
 import Loading from './Loading';
@@ -98,6 +98,15 @@ const Divider = styled.div`
   border-radius: 5px;
 `;
 
+const getSelectedText = () => {
+  const selection = document.getSelection();
+  if (selection) {
+    const text = selection.toString();
+    return text;
+  }
+  return '';
+};
+
 const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
   const { text, locale } = useI18n();
   const [liked, setLiked] = useState(false);
@@ -105,42 +114,33 @@ const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
 
   const theme = useTheme();
 
-  let { username, avatar, content, role, time, id } = message;
+  let { username, avatar, content, role, time, id, recall } = message;
 
-  const MENU_ID = 'MESSAGE_BUBBLE_CONTEXT_MENU';
-
-  const { show, hideAll } = useContextMenu({ id: MENU_ID });
+  const { show, hideAll } = useContextMenu({ id });
 
   function handleContextMenu(event: any) {
-    show({
-      event,
-      props: {
-        key: 'value',
-      },
-    });
+    show({ event, props: { key: 'value' } });
   }
 
   if (message.status === 'error') {
     content = (text.errorMessage as any)[content] || content;
+  } else if (recall) {
+    content = `<div class="thinking-process"></div>\n\n${content}`;
   }
 
   avatar = avatar || (role === 'assistant' ? Devpilot : User);
-
   username = username || (role === 'assistant' ? 'Devpilot' : role === 'user' ? 'User' : role === 'system' ? 'System' : '');
 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if (content === '...') {
-      setIsLoading(true);
-    } else {
-      setIsLoading(false);
-    }
+    setIsLoading(content === '...');
   }, [content]);
 
   const copyThisMessage = () => {
-    navigator?.clipboard?.writeText(content);
-    sendToPlugin(PluginCommand.CopyCode, { content, messageId: id, role, language: 'text' });
+    const copyTarget = getSelectedText() || content;
+    navigator?.clipboard?.writeText(copyTarget);
+    sendToPlugin(PluginCommand.CopyCode, { content: copyTarget, messageId: id, role, language: 'text' });
   };
 
   const retryThisMessage = () => {
@@ -161,24 +161,24 @@ const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
     sendToPlugin(PluginCommand.DeleteMessage, message);
   };
 
-  function codeblockActions(action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }) {
-    sendToPlugin(action, { ...extra, content, messageId: id, lang, role });
-  }
+  // function codeblockActions(action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }) {
+  //   sendToPlugin(action, { ...extra, content, messageId: id, lang, role });
+  // }
 
-  const linkActions = (href: string): boolean => {
-    switch (href) {
-      case '#/fix':
-        sendToPlugin(PluginCommand.FixCode);
-        return true;
-      case '#/explain':
-        sendToPlugin(PluginCommand.ExplainCode);
-        return true;
-      case '#/comment':
-        sendToPlugin(PluginCommand.CommentCode);
-        return true;
-    }
-    return false;
-  };
+  // const linkActions = (href: string): boolean => {
+  //   switch (href) {
+  //     case '#/fix':
+  //       sendToPlugin(PluginCommand.FixCode);
+  //       return true;
+  //     case '#/explain':
+  //       sendToPlugin(PluginCommand.ExplainCode);
+  //       return true;
+  //     case '#/comment':
+  //       sendToPlugin(PluginCommand.CommentCode);
+  //       return true;
+  //   }
+  //   return false;
+  // };
 
   if (role === 'divider') {
     return (
@@ -213,12 +213,13 @@ const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
           <Loading />
         ) : (
           <>
-            <Markdown markdown={content} codeblockActions={codeblockActions} linkActions={linkActions} codeRef={message.codeRef} />
-            {message.codeRef && message.codeRef.visible !== false && <CodeReference {...message.codeRef} />}
+            {/* <Markdown markdown={content} codeblockActions={codeblockActions} linkActions={linkActions} chatMessage={message} /> */}
+            <Markdown markdown={content} chatMessage={message} />
+            {message.codeRef && message.codeRef.visible !== false && <CodeRef {...message.codeRef} />}
           </>
         )}
       </ErrorBoundary>
-      <Menu id={MENU_ID} theme={theme} animation={false}>
+      <Menu id={id} theme={theme} animation={false}>
         <Item
           id="regenerate"
           onClick={() => {

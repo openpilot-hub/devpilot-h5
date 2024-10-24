@@ -19,6 +19,13 @@ const lang = {
     createFileWithCode: 'Create file with code',
     copyToClipboard: 'Copy to clipboard',
   },
+  recall: {
+    stepsTitle: 'Tinking',
+    steps: ['Analyze', 'Retrieve', 'Generate'],
+    stepsDesc: ['Analyze input content', 'Find related information', 'Summarize and produce an answer'],
+    resultTitle: 'Search Result',
+    resultDesc: 'Base on the following content',
+  },
   inputPlaceholder: "Ask a question or type '/' for commands",
   shortcutHint: 'Shift + Enter for new line',
   repoEmbedded: 'Repo embedding search available<br/>use <span class="xxx">@repo</span> to ask the whole repo',
