@@ -1,8 +1,9 @@
+import { isDevelopment } from '@/utils';
 import { useCallback, useEffect, useState } from 'react';
-import { Lang, useI18n } from '../i18n';
-import { ChatMessage, ChatMessageAction, CodeReference, PluginCommand, QuickCommand } from '../typings';
+import { useI18n, type I18nLang } from '../i18n';
+import { ChatMessage, ChatMessageAction, PluginCommand } from '../typings';
 import { mockMessages } from './mock';
-import { disposeHandler, isStandardalone, receiveFromPlugin, sendToPlugin } from './pluginBridge';
+import { disposeHandler, receiveFromPlugin, sendToPlugin } from './pluginBridge';
 
 export function assembleActionsToMessages(messages: ChatMessage[], loading: boolean): ChatMessage[] {
   const regen = (loading ? [] : ['regenerate']) as ChatMessageAction[];
@@ -38,36 +39,22 @@ export function assembleActionsToMessages(messages: ChatMessage[], loading: bool
   });
 }
 
-export const createUserMessage = (content: string, codeRef?: CodeReference): ChatMessage => {
-  if (content === QuickCommand.Clear) {
-    return {
-      id: Math.random().toString(36).substring(7),
-      status: 'ok',
-      content,
-      role: 'divider',
-      username: '',
-      avatar: '',
-      time: Date.now(),
-      streaming: false,
-      actions: [],
-      codeRef,
-    };
-  }
+export const createUserMessage = (content: string, rest?: Partial<ChatMessage>): ChatMessage => {
   return {
     id: Math.random().toString(36).substring(7),
     status: 'ok',
-    content,
     role: 'user',
     username: 'User',
     avatar: '',
     time: Date.now(),
     streaming: false,
     actions: [],
-    codeRef,
+    ...rest,
+    content,
   };
 };
 
-export const createWelcomeMessage = (text: Lang, username: string): ChatMessage => {
+export const createWelcomeMessage = (text: I18nLang, username: string): ChatMessage => {
   return {
     id: Math.random().toString(36).substring(7),
     status: 'ok',
@@ -111,20 +98,19 @@ export const createDividerMessage = (): ChatMessage => {
 
 export function useMessages() {
   const { text } = useI18n();
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const mockMsgs = mockMessages(text);
-
-  useEffect(() => {
-    if (isStandardalone()) {
-      setMessages(mockMsgs);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    if (isDevelopment()) {
+      return mockMessages(text);
     }
-  }, [text]);
+    return [];
+  });
 
   const sendMessage = useCallback(
     (newMessage: ChatMessage) => {
       let newMessageStack = [...messages, newMessage];
       setMessages(newMessageStack);
       sendToPlugin(PluginCommand.AppendToConversation, newMessage);
+      console.log('sendToPlugin =>', newMessage);
     },
     [messages],
   );
@@ -137,5 +123,6 @@ export function useMessages() {
     const handle = receiveFromPlugin(PluginCommand.RenderChatConversation, (messages) => setMessages([...messages]));
     return () => disposeHandler(handle);
   }, []);
+
   return { messages, sendMessage, interrupMessageStream: interruptChatStream };
 }

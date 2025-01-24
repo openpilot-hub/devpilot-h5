@@ -1,4 +1,3 @@
-import { Item, Menu, useContextMenu } from 'react-contexify';
 import { LuMinusSquare, LuPlusSquare } from 'react-icons/lu';
 import { PrismLight as SyntaxHighlighter } from 'react-syntax-highlighter';
 import bash from 'react-syntax-highlighter/dist/cjs/languages/prism/bash';
@@ -15,17 +14,18 @@ import sql from 'react-syntax-highlighter/dist/cjs/languages/prism/sql';
 import stylus from 'react-syntax-highlighter/dist/cjs/languages/prism/stylus';
 import tsx from 'react-syntax-highlighter/dist/cjs/languages/prism/tsx';
 import typescript from 'react-syntax-highlighter/dist/cjs/languages/prism/typescript';
-import { oneDark, oneLight } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import xml from 'react-syntax-highlighter/dist/cjs/languages/prism/xml-doc';
 import styled from 'styled-components';
 import './Markdown.css';
 
+import { useMessage } from '@/contexts/message';
 import { useI18n } from '@/i18n';
 import { sendToPlugin } from '@/services/pluginBridge';
-import { useTheme } from '@/themes/themes';
-import React, { useCallback, useRef, useState } from 'react';
-import { ChatMessage, IRecall, PluginCommand } from '../typings';
+import { useSyntaxTheme } from '@/themes/themes';
+import { Dropdown, MenuProps } from 'antd';
+import React, { memo, useRef, useState } from 'react';
+import { IRecall, PluginCommand } from '../typings';
 import IconButton from './IconButton';
-import RAGFileList from './RAGFileList';
 import Thinking from './Thinking';
 
 // SyntaxHighlighter.registerLanguage('javascriptreact', jsx) // 不生效
@@ -46,8 +46,10 @@ SyntaxHighlighter.registerLanguage('json', json);
 SyntaxHighlighter.registerLanguage('java', java);
 SyntaxHighlighter.registerLanguage('python', python);
 SyntaxHighlighter.registerLanguage('sql', sql);
+SyntaxHighlighter.registerLanguage('xml', xml);
 
 function replaceLast(str: string, occurence: string, replacement: string) {
+  if (!str) return '';
   return str.replace(new RegExp(`${occurence}$`), replacement);
 }
 
@@ -100,8 +102,7 @@ const getSelectedText = () => {
   return '';
 };
 
-const getContent = (content: string) => {
-  const selectedText = getSelectedText();
+const getContent = (content: string, selectedText?: string | null) => {
   if (selectedText && content.includes(selectedText)) {
     return selectedText;
   }
@@ -145,220 +146,192 @@ function Opener({ index, opens, onClick }: { index: number; opens: boolean[]; on
   );
 }
 
-const MarkdownComponents = ({ chatMessage }: { chatMessage: ChatMessage }) => {
-  // TODO: use context to get current chatMessage
-  const messageRef = useRef<ChatMessage>(chatMessage);
-  const { text } = useI18n();
-  const theme = useTheme();
+function DivRender(params: any) {
+  const { node, className, ...props } = params;
+  const [opens, setOpens] = useState<boolean[]>([]);
+  const { recall, id, role } = useMessage();
+  const syntaxTheme = useSyntaxTheme();
 
-  const syntaxTheme = theme === 'dark' ? oneDark : oneLight;
+  // if (className === 'rag-files' && params.children) {
+  //   const repo = props['data-repo'];
+  //   return (
+  //     <RAGFileList
+  //       files={params.children.map((child: any) => child.props.children?.[0])}
+  //       clickAction={(file: string) => {
+  //         sendToPlugin(PluginCommand.OpenFile, { repo, content: file, messageId: id, lang: 'text', role });
+  //       }}
+  //     />
+  //   );
+  // } else
 
-  messageRef.current = chatMessage;
-
-  const div = useCallback((params: any) => {
-    const { recall, id, role } = messageRef.current;
-    const { node, className, ...props } = params;
-    const [opens, setOpens] = useState<boolean[]>([]);
-
-    if (className === 'rag-files' && params.children) {
-      const repo = props['data-repo'];
-      return (
-        <RAGFileList
-          files={params.children.map((child: any) => child.props.children?.[0])}
-          clickAction={(file: string) => {
-            sendToPlugin(PluginCommand.OpenFile, { repo, content: file, messageId: id, lang: 'text', role });
-          }}
-        />
-      );
-    } else if (className === 'thinking-process') {
-      const refs = [...(recall!.localRefs || []), ...(recall!.remoteRefs || [])];
-      return (
-        <Thinking data={recall as IRecall} count={refs.length}>
-          {refs.map((item, index) => {
-            const open = opens[index] !== false;
-            return (
-              <CodeEditor key={index}>
-                <CodeEditorActionBar style={{ borderBottom: open ? undefined : 0 }}>
-                  <Opener index={index} opens={opens} onClick={setOpens} />
-                  <LanguageTag>
-                    {item.fileName ? (
-                      <span
-                        style={{ cursor: 'pointer' }}
-                        title={item.fileUrl}
-                        onClick={() => {
-                          sendToPlugin(PluginCommand.GotoSelectedCode, item);
-                        }}
-                      >
-                        {item.fileName}
-                      </span>
-                    ) : (
-                      item.languageId || ''
-                    )}
-                  </LanguageTag>
-                  {item.selectedEndLine && (
-                    <Lines>
-                      Lines {item.selectedStartLine + 1}-{item.selectedEndLine + 1}
-                    </Lines>
+  if (className === 'thinking-process') {
+    const refs = [...(recall!.localRefs || []), ...(recall!.remoteRefs || [])];
+    return (
+      <Thinking data={recall as IRecall} count={refs.length}>
+        {refs.map((item, index) => {
+          const open = opens[index] !== false;
+          return (
+            <CodeEditor key={index}>
+              <CodeEditorActionBar style={{ borderBottom: open ? undefined : 0 }}>
+                <Opener index={index} opens={opens} onClick={setOpens} />
+                <LanguageTag>
+                  {item.fileName ? (
+                    <span
+                      style={{ cursor: 'pointer' }}
+                      title={item.fileUrl}
+                      onClick={() => {
+                        sendToPlugin(PluginCommand.GotoSelectedCode, item);
+                      }}
+                    >
+                      {item.fileName}
+                    </span>
+                  ) : (
+                    item.languageId || ''
                   )}
-                </CodeEditorActionBar>
-                {open && (
-                  <SyntaxHighlighter
-                    style={syntaxTheme}
-                    language={item.languageId}
-                    PreTag="div"
-                    className="codeStyle"
-                    showLineNumbers={true}
-                    useInlineStyles={true}
-                  >
-                    {item.sourceCode!}
-                  </SyntaxHighlighter>
+                </LanguageTag>
+                {item.selectedEndLine && (
+                  <Lines>
+                    Lines {item.selectedStartLine + 1}-{item.selectedEndLine + 1}
+                  </Lines>
                 )}
-              </CodeEditor>
-            );
-          })}
-          {params.children}
-        </Thinking>
-      );
-    } else {
-      return React.createElement('div', props, params.children);
-    }
-  }, []);
-
-  const code = useCallback(({ node, className, inline, ...props }: any) => {
-    const { codeRef, id, role } = messageRef.current;
-    const hasLang = /language-(\w+)/.exec(className || '');
-    const lang = hasLang ? hasLang[1] : '';
-    const content = replaceLast(props.children[0], '\n', '');
-    const { show, hideAll } = useContextMenu({ id: 'CODEBLOCK_CONTEXT_MENU' });
-
-    function handleContextMenu(event: any) {
-      event.stopPropagation();
-      show({ event, props: { key: 'value' } });
-    }
-
-    const codeblockActions = (action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }): void => {
-      sendToPlugin(action, { ...extra, content, messageId: id, lang, role });
-    };
-
-    return !inline ? (
-      <CodeEditor onContextMenu={handleContextMenu}>
-        <CodeEditorActionBar>
-          <LanguageTag className="lang-tag">
-            {codeRef ? (
-              <span
-                style={{ cursor: 'pointer' }}
-                // data-tooltip-id="tooltip"
-                // data-tooltip-content={codeRef.fileUrl + codeRef.fileUrl}
-                title={codeRef.fileUrl}
-                onClick={() => {
-                  sendToPlugin(PluginCommand.GotoSelectedCode, codeRef);
-                }}
-              >
-                {codeRef.fileName}
-              </span>
-            ) : (
-              lang || ''
-            )}
-          </LanguageTag>
-          <IconButton
-            icon="cursor"
-            type="fade"
-            title={text.codeblockActions.insertAtCursor}
-            onClick={() => codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang)}
-          />
-          <IconButton
-            icon="replace"
-            type="fade"
-            title={text.codeblockActions.replaceSelectedCode}
-            onClick={() => codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content), lang)}
-          />
-          <IconButton
-            icon="file"
-            type="fade"
-            title={text.codeblockActions.createFileWithCode}
-            onClick={() => codeblockActions(PluginCommand.CreateNewFile, getContent(content), lang)}
-          />
-          <IconButton
-            icon="copy"
-            type="fade"
-            title={text.codeblockActions.copyToClipboard}
-            onClick={() => {
-              let _content = getContent(content);
-              navigator?.clipboard?.writeText(_content);
-              codeblockActions(PluginCommand.CopyCode, _content, lang);
-            }}
-          />
-        </CodeEditorActionBar>
-        <SyntaxHighlighter
-          style={syntaxTheme}
-          language={lang}
-          PreTag="div"
-          className="codeStyle"
-          showLineNumbers={true}
-          useInlineStyles={true}
-          // wrapLines={hasMeta}
-          // lineProps={applyHighlights}
-        >
-          {content}
-        </SyntaxHighlighter>
-        <Menu id={'CODEBLOCK_CONTEXT_MENU'} theme={theme} animation={false}>
-          <Item
-            id="text.codeblockActions.replaceSelectedCode"
-            onClick={() => {
-              codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content), lang);
-              hideAll();
-            }}
-          >
-            {text.codeblockActions.replaceSelectedCode}
-          </Item>
-          <Item
-            id="text.codeblockActions.insertAtCursor"
-            onClick={() => {
-              codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content), lang);
-              hideAll();
-            }}
-          >
-            {text.codeblockActions.insertAtCursor}
-          </Item>
-        </Menu>
-      </CodeEditor>
-    ) : (
-      <code className={className} {...props} />
+              </CodeEditorActionBar>
+              {open && (
+                <SyntaxHighlighter
+                  style={syntaxTheme}
+                  language={item.languageId}
+                  PreTag="div"
+                  className="codeStyle"
+                  showLineNumbers={true}
+                  useInlineStyles={true}
+                >
+                  {item.sourceCode!}
+                </SyntaxHighlighter>
+              )}
+            </CodeEditor>
+          );
+        })}
+        {params.children}
+      </Thinking>
     );
-  }, []);
+  } else {
+    return React.createElement('div', props, params.children);
+  }
+}
 
-  const comp = {
-    // codeblockActions(action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }): void {
-    //   throw new Error('Method not implemented.');
-    // },
-    // linkActions(href: string): boolean {
-    //   throw new Error('Method not implemented.');
-    // },
-    a({ node, ...props }: any) {
-      return (
-        <a
-          {...props}
-          onClick={(event) => {
-            const preventDefault = linkActions(node.properties.href);
-            if (preventDefault) {
-              event.preventDefault();
-              event.stopPropagation();
-            }
-          }}
-        />
-      );
-    },
-    div,
-    code,
+function CodeRender(params: any) {
+  const { node, className, inline, ...props } = params;
+  const { id, role } = useMessage();
+  const hasLang = /language-(\w+)/.exec(className || '');
+  const lang = hasLang ? hasLang[1] : '';
+  const content = replaceLast(props.children?.[0], '\n', '');
+  const { text } = useI18n();
+  const syntaxTheme = useSyntaxTheme();
+  const selectionRef = useRef('');
+
+  const onCopyTriggerEnter = () => {
+    selectionRef.current = getSelectedText();
   };
 
-  // comp.code = comp.code.bind(comp);
-  // comp.div = comp.div.bind(comp);
-  // comp.a = comp.a.bind(comp);
+  const codeblockActions = (action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }): void => {
+    sendToPlugin(action, { ...extra, content, messageId: id, lang, role });
+  };
 
-  return comp;
-};
+  const contextItems: MenuProps['items'] = [
+    {
+      label: <span onMouseEnter={onCopyTriggerEnter}>{text.codeblockActions.replaceSelectedCode}</span>,
+      key: 'replaceSelectedCode',
+      onClick() {
+        codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content, selectionRef.current), lang);
+      },
+    },
+    {
+      label: <span onMouseEnter={onCopyTriggerEnter}>{text.codeblockActions.insertAtCursor}</span>,
+      key: 'insertAtCursor',
+      onClick() {
+        codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content, selectionRef.current), lang);
+      },
+    },
+  ];
 
-export type MarkdownComponents = ReturnType<typeof MarkdownComponents>;
+  return !inline ? (
+    <CodeEditor>
+      <CodeEditorActionBar>
+        <LanguageTag className="lang-tag">{lang || ''}</LanguageTag>
+        <IconButton
+          icon="cursor"
+          type="fade"
+          title={text.codeblockActions.insertAtCursor}
+          onMouseEnter={onCopyTriggerEnter}
+          onClick={() => codeblockActions(PluginCommand.InsertCodeAtCaret, getContent(content, selectionRef.current), lang)}
+        />
+        <IconButton
+          icon="replace"
+          type="fade"
+          title={text.codeblockActions.replaceSelectedCode}
+          onMouseEnter={onCopyTriggerEnter}
+          onClick={() => codeblockActions(PluginCommand.ReplaceSelectedCode, getContent(content, selectionRef.current), lang)}
+        />
+        <IconButton
+          icon="file"
+          type="fade"
+          title={text.codeblockActions.createFileWithCode}
+          onMouseEnter={onCopyTriggerEnter}
+          onClick={() => codeblockActions(PluginCommand.CreateNewFile, getContent(content, selectionRef.current), lang)}
+        />
+        <IconButton
+          icon="copy"
+          type="fade"
+          title={text.codeblockActions.copyToClipboard}
+          onMouseEnter={onCopyTriggerEnter}
+          onClick={() => {
+            let _content = getContent(content, selectionRef.current);
+            navigator?.clipboard?.writeText(_content);
+            codeblockActions(PluginCommand.CopyCode, _content, lang);
+          }}
+        />
+      </CodeEditorActionBar>
+      <Dropdown menu={{ items: contextItems }} trigger={['contextMenu']}>
+        <div
+          onContextMenu={(e) => {
+            // hide the outer context menu.
+            (e.target as HTMLDivElement).click();
+            // stop the outer context menu from showing.
+            e.stopPropagation();
+          }}
+        >
+          <SyntaxHighlighter
+            style={syntaxTheme}
+            language={lang}
+            PreTag="div"
+            className="codeStyle"
+            showLineNumbers={true}
+            useInlineStyles={true}
+            // wrapLines={hasMeta}
+            // lineProps={applyHighlights}
+          >
+            {content}
+          </SyntaxHighlighter>
+        </div>
+      </Dropdown>
+    </CodeEditor>
+  ) : (
+    <code className={className} {...props} />
+  );
+}
 
-export const CodeEditorGen = MarkdownComponents;
+function ARender({ node, ...props }: any) {
+  return (
+    <a
+      {...props}
+      onClick={(event) => {
+        const preventDefault = linkActions(node.properties.href);
+        if (preventDefault) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }}
+    />
+  );
+}
+
+export default { div: memo(DivRender), code: memo(CodeRender), a: memo(ARender) };

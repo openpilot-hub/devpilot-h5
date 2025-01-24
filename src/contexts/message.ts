@@ -1,7 +1,7 @@
 import { ChatMessage } from '@/typings';
-import React, { useContext } from 'react';
+import { createContext, useContext } from 'react';
 
-export const MessageContext = React.createContext<ChatMessage>({} as ChatMessage);
+export const MessageContext = createContext<ChatMessage>({} as ChatMessage);
 
 export function useMessage() {
   return useContext(MessageContext);

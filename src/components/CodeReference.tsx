@@ -62,7 +62,7 @@ const Icon = styled.span`
   font-size: 20px;
   flex-grow: 0;
   flex-shrink: 0;
-  color: ${(props) => props.theme.primary};
+  color: ${(props) => props.theme.primaryColor};
   line-height: 1ex;
 `;
 

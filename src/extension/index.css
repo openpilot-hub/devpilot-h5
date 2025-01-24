@@ -3,12 +3,13 @@
   line-height: 1.5;
   font-weight: 400;
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  /* color: rgba(255, 255, 255, 0.87);
+  background-color: #242424; */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: transparent !important;
 }
 
 a,
@@ -30,7 +31,6 @@ a:hover {
 body {
   min-width: 204px;
   min-height: 100vh;
-  background-color: #333;
   overflow: hidden;
   padding: 0 !important; /* Override vscode default body padding */
   font-size: 13px;
@@ -56,11 +56,11 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
-.react-tooltip {
+/* .react-tooltip {
   z-index: 9999 !important;
   background-color: #213547 !important;
   color: white !important;
-}
+} */
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -82,6 +82,22 @@ button:focus-visible {
   }
 }
 
+.flex {
+  display: flex;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.justify-end {
+  justify-content: flex-end;
+}
+
 .flex-1 {
   flex: 1;
 }
@@ -90,6 +106,14 @@ button:focus-visible {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.pointer {
+  cursor: pointer;
+}
+
+.not-allowed {
+  cursor: not-allowed;
 }
 
 /* textarea::-webkit-input-placeholder {

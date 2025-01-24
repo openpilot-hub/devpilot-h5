@@ -1,0 +1,64 @@
+.input-container {
+  position: relative;
+  padding: 8px;
+  background-color: var(--inputContainerBG);
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.24);
+
+  .input-box {
+    padding: 1px;
+    background-image: linear-gradient(to right, #6ed9bf, #ffc4fd, #4e8eff);
+    border-radius: 4px;
+    flex-direction: column;
+  }
+
+  textarea {
+    border-radius: 4px 4px 0 0;
+    padding: 8px;
+    background-color: var(--inputContainerBG);
+    font-weight: 400;
+    font-size: 14px;
+
+    &,
+    &:focus-visible {
+      border: none;
+      outline: none;
+    }
+
+    &:hover,
+    &:focus {
+      box-shadow: none;
+      background-color: var(--inputContainerBG);
+    }
+  }
+
+  .shortcuts-box {
+    background-color: var(--inputContainerBG);
+    border-radius: 0 0 4px 4px;
+    overflow: hidden;
+  }
+
+  .shortcuts {
+    font-size: 12px;
+    display: flex;
+    line-height: 1;
+    gap: 6px;
+    padding: 8px 0 0;
+    border-top: solid 1px var(--itemBorderColor);
+    margin: 0 8px;
+    padding: 6px 0;
+    align-items: center;
+
+    > .pointer:hover {
+      color: #ccc;
+    }
+
+    svg {
+      vertical-align: -3px;
+    }
+
+    .ant-divider {
+      border-color: var(--itemBorderColor);
+      margin: 0;
+    }
+  }
+}

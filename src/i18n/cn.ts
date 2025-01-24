@@ -1,6 +1,6 @@
-import { Lang } from '.';
+import { type I18nLang } from '.';
 
-const lang: Lang = {
+const lang: I18nLang = {
   ragFileListTitle: '上下文',
   ragFileListTitleFileCount: '(%n 个文件)',
   send: '发送',
@@ -12,8 +12,18 @@ const lang: Lang = {
   copyMsg: '复制到剪贴板',
   likeMsg: '赞',
   dislikeMsg: '踩',
+  chatWithContext: {
+    label: '上下文',
+    title: '带上下文的对话',
+  },
+  chat: {
+    label: '对话',
+    title: '仅对话',
+  },
   errorMessage: {
     needLogin: '您好，我是DevPilot，您的AI代码助理。登录并开始AI之旅吧！',
+    exceedFilesLimit: '最多引用5处！',
+    exceedFilesLimitOfCmd: '命令中最多引用1处！',
   },
   codeblockActions: {
     insertAtCursor: '在光标处插入',
@@ -28,8 +38,11 @@ const lang: Lang = {
     resultTitle: '搜索结果',
     resultDesc: '基于以下内容整理回答',
   },
-  inputPlaceholder: "提问或输入 '/' 查看命令",
-  shortcutHint: 'Shift + Enter 换行',
+  inputPlaceholder: "提问或输入 '/' 查看命令\nShift + Enter 换行",
+  inputPlaceholder_mac: "提问或输入 '/' 查看命令\n⇧ + ⏎ 换行",
+  // shortcutHint: 'Shift + Enter 换行',
+  clearChatHistory: '清除对话历史',
+  useCommand: '使用命令',
   repoEmbedded: '可使用仓库向量增强检索, 使用@repo对整个仓库进行提问',
   applyRepoEmbedding: '该仓库还未向量化，请先申请仓库向量化',
   welcome: `欢迎您 {{USER}}! 很高兴您的使用， 我是您值得信赖的助理，随时准备帮助您更有效地完成任务。

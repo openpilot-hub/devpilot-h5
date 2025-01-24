@@ -1,8 +1,9 @@
-import { ChatMessage } from '@/typings';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 // import { visit } from 'unist-util-visit';
-import { CodeEditorGen } from './CodeEditor';
+import { memo } from 'react';
+import type { ReactMarkdownOptions } from 'react-markdown/lib/react-markdown';
+import MarkdownComponents from './CodeEditor';
 
 // function rehypeInlineCodeProperty() {
 //   return function (tree: any) {
@@ -20,17 +21,10 @@ import { CodeEditorGen } from './CodeEditor';
 //   };
 // }
 
-type MarkdownProps = {
-  markdown: string;
-  // codeblockActions: MarkdownComponents['codeblockActions'];
-  // linkActions: MarkdownComponents['linkActions'];
-  chatMessage: ChatMessage;
-};
-
-// export default function Markdown({ markdown, chatMessage, codeblockActions, linkActions }: MarkdownProps) {
-export default function Markdown({ markdown, chatMessage }: MarkdownProps) {
-  const codeEditor = CodeEditorGen({ chatMessage });
-  // codeEditor.codeblockActions = codeblockActions.bind(codeEditor);
-  // codeEditor.linkActions = linkActions.bind(codeEditor);
-  return <ReactMarkdown className="markdown-renderer" children={markdown} components={codeEditor} rehypePlugins={[rehypeRaw]} />;
+function Markdown(props: ReactMarkdownOptions) {
+  return (
+    <ReactMarkdown {...props} className="markdown-renderer" components={MarkdownComponents} rehypePlugins={[rehypeRaw]}></ReactMarkdown>
+  );
 }
+
+export default memo(Markdown);

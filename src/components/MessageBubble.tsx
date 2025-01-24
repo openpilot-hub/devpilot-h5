@@ -1,7 +1,6 @@
-import { useTheme } from '@/themes/themes';
-import React, { useEffect, useState } from 'react';
-import { Item, Menu, useContextMenu } from 'react-contexify';
-import 'react-contexify/ReactContexify.css';
+import { MessageContext } from '@/contexts/message';
+import { Dropdown, MenuProps } from 'antd';
+import { memo, useRef, useState } from 'react';
 import styled from 'styled-components';
 import Devpilot from '../assets/devpilot.svg';
 import User from '../assets/user.svg';
@@ -24,7 +23,6 @@ const MessageBubbleContainer = styled.div`
   margin-bottom: 10px;
   position: relative;
 
-  --contexify-menu-shadow: ${(props) => props.theme.contextMenuShadow};
   &:hover {
     .close-button {
       display: flex;
@@ -107,20 +105,20 @@ const getSelectedText = () => {
   return '';
 };
 
-const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
+const userNameMap = {
+  assistant: 'DevPilot',
+  user: 'You',
+  system: 'System',
+  divider: 'Divider',
+};
+
+const MessageBubble = ({ message }: { message: ChatMessage }) => {
   const { text, locale } = useI18n();
   const [liked, setLiked] = useState(false);
   const [disliked, setDisLiked] = useState(false);
-
-  const theme = useTheme();
+  const selectionRef = useRef('');
 
   let { username, avatar, content, role, time, id, recall } = message;
-
-  const { show, hideAll } = useContextMenu({ id });
-
-  function handleContextMenu(event: any) {
-    show({ event, props: { key: 'value' } });
-  }
 
   if (message.status === 'error') {
     content = (text.errorMessage as any)[content] || content;
@@ -129,16 +127,12 @@ const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
   }
 
   avatar = avatar || (role === 'assistant' ? Devpilot : User);
-  username = username || (role === 'assistant' ? 'Devpilot' : role === 'user' ? 'User' : role === 'system' ? 'System' : '');
+  username = username || userNameMap[role] || '';
 
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    setIsLoading(content === '...');
-  }, [content]);
+  const isLoading = content === '...';
 
   const copyThisMessage = () => {
-    const copyTarget = getSelectedText() || content;
+    const copyTarget = selectionRef.current || content;
     navigator?.clipboard?.writeText(copyTarget);
     sendToPlugin(PluginCommand.CopyCode, { content: copyTarget, messageId: id, role, language: 'text' });
   };
@@ -161,24 +155,9 @@ const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
     sendToPlugin(PluginCommand.DeleteMessage, message);
   };
 
-  // function codeblockActions(action: PluginCommand, content: string, lang: string, extra?: { [key: string]: string }) {
-  //   sendToPlugin(action, { ...extra, content, messageId: id, lang, role });
-  // }
-
-  // const linkActions = (href: string): boolean => {
-  //   switch (href) {
-  //     case '#/fix':
-  //       sendToPlugin(PluginCommand.FixCode);
-  //       return true;
-  //     case '#/explain':
-  //       sendToPlugin(PluginCommand.ExplainCode);
-  //       return true;
-  //     case '#/comment':
-  //       sendToPlugin(PluginCommand.CommentCode);
-  //       return true;
-  //   }
-  //   return false;
-  // };
+  const onCopyTriggerEnter = () => {
+    selectionRef.current = getSelectedText();
+  };
 
   if (role === 'divider') {
     return (
@@ -188,77 +167,71 @@ const MessageBubble: React.FC<ChatMessage> = (message: ChatMessage) => {
     );
   }
 
+  const contextItems: MenuProps['items'] = [
+    {
+      label: text.retryMsg,
+      key: 'regenerate',
+      onClick: retryThisMessage,
+    },
+    {
+      label: <span onMouseEnter={onCopyTriggerEnter}>{text.copyMsg}</span>,
+      key: 'copy',
+      onClick: copyThisMessage,
+    },
+    {
+      label: text.likeMsg,
+      key: 'like',
+      onClick: likeThisMessage,
+    },
+    {
+      label: text.dislikeMsg,
+      key: 'dislike',
+      onClick: dislikeThisMessage,
+    },
+  ];
+
   return (
-    <MessageBubbleContainer onContextMenu={handleContextMenu}>
-      {message.actions.includes('delete') && <CloseButton onClick={deleteMessage} />}
-      <HeaderContainer>
-        <Avatar src={avatar} alt={username} className="avatar" />
-        <RightSide>
-          <Username>{username}</Username>
-          <Time date={time} locale={locale} />
-        </RightSide>
-      </HeaderContainer>
-      <ActionBar>
-        {message.actions.includes('regenerate') && <IconButton type="fade" icon="retry" title={text.retryMsg} onClick={retryThisMessage} />}
-        {message.actions.includes('copy') && <IconButton type="fade" icon="copy" title={text.copyMsg} onClick={copyThisMessage} />}
-        {message.actions.includes('like') && !disliked && (
-          <IconButton type="activable" icon="like" title={text.likeMsg} onClick={likeThisMessage} />
-        )}
-        {message.actions.includes('dislike') && !liked && (
-          <IconButton type="activable" icon="dislike" title={text.dislikeMsg} onClick={dislikeThisMessage} />
-        )}
-      </ActionBar>
-      <ErrorBoundary>
+    <MessageBubbleContainer onContextMenu={(e) => e.preventDefault()} className="message-bubble-container">
+      <MessageContext.Provider value={message}>
+        {message.actions.includes('delete') && <CloseButton onClick={deleteMessage} />}
+        <HeaderContainer>
+          <Avatar src={avatar} alt={username} className="avatar" />
+          <RightSide>
+            <Username>{username}</Username>
+            <Time date={time} locale={locale} />
+          </RightSide>
+        </HeaderContainer>
+        <ActionBar>
+          {message.actions.includes('regenerate') && (
+            <IconButton type="fade" icon="retry" title={text.retryMsg} onClick={retryThisMessage} />
+          )}
+          {message.actions.includes('copy') && (
+            <IconButton type="fade" icon="copy" title={text.copyMsg} onMouseEnter={onCopyTriggerEnter} onClick={copyThisMessage} />
+          )}
+          {message.actions.includes('like') && !disliked && (
+            <IconButton type="activable" icon="like" title={text.likeMsg} onClick={likeThisMessage} />
+          )}
+          {message.actions.includes('dislike') && !liked && (
+            <IconButton type="activable" icon="dislike" title={text.dislikeMsg} onClick={dislikeThisMessage} />
+          )}
+        </ActionBar>
         {isLoading ? (
           <Loading />
         ) : (
-          <>
-            {/* <Markdown markdown={content} codeblockActions={codeblockActions} linkActions={linkActions} chatMessage={message} /> */}
-            <Markdown markdown={content} chatMessage={message} />
-            {message.codeRef && message.codeRef.visible !== false && <CodeRef {...message.codeRef} />}
-          </>
+          <ErrorBoundary>
+            <Dropdown menu={{ items: contextItems }} trigger={['contextMenu']}>
+              <div>
+                <Markdown>{content}</Markdown>
+                {message.codeRefs?.map((codeRef, index) => (
+                  <CodeRef key={index} {...codeRef} />
+                ))}
+              </div>
+            </Dropdown>
+          </ErrorBoundary>
         )}
-      </ErrorBoundary>
-      <Menu id={id} theme={theme} animation={false}>
-        <Item
-          id="regenerate"
-          onClick={() => {
-            retryThisMessage();
-            hideAll();
-          }}
-        >
-          {text.retryMsg}
-        </Item>
-        <Item
-          id="copy"
-          onClick={() => {
-            copyThisMessage();
-            hideAll();
-          }}
-        >
-          {text.copyMsg}
-        </Item>
-        <Item
-          id="like"
-          onClick={() => {
-            likeThisMessage();
-            hideAll();
-          }}
-        >
-          {text.likeMsg}
-        </Item>
-        <Item
-          id="dislike"
-          onClick={() => {
-            dislikeThisMessage();
-            hideAll();
-          }}
-        >
-          {text.dislikeMsg}
-        </Item>
-      </Menu>
+      </MessageContext.Provider>
     </MessageBubbleContainer>
   );
 };
 
-export default MessageBubble;
+export default memo(MessageBubble);

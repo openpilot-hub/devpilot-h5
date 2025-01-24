@@ -1,3 +1,4 @@
+import { Tooltip } from 'antd';
 import React from 'react';
 import { AiFillCopy, AiFillDislike, AiFillFileAdd, AiFillLike } from 'react-icons/ai';
 import { BsThreeDots } from 'react-icons/bs';
@@ -17,6 +18,7 @@ interface IconButtonProps {
   size?: Size;
   title?: string;
   onClick?: () => void;
+  onMouseEnter?: () => void;
   style?: React.CSSProperties;
 }
 
@@ -38,7 +40,7 @@ const Button = styled.div<{ size: Size }>`
   outline: none;
   transition: background-color 0.2s ease;
   &:hover {
-    background-color: #d1e8ff90;
+    background-color:${(props) => props.theme.inputBackground}
   }
   &:focus {
     outline: none;
@@ -48,7 +50,7 @@ const Button = styled.div<{ size: Size }>`
   }
 `;
 
-const IconButton: React.FC<IconButtonProps> = ({ type, icon, size, title, style, onClick }) => {
+const IconButton: React.FC<IconButtonProps> = ({ type, icon, size, title, style, onClick, onMouseEnter }) => {
   const [toggled, setToggled] = React.useState(false);
   const clicked = () => {
     if (type === 'fade') {
@@ -64,27 +66,27 @@ const IconButton: React.FC<IconButtonProps> = ({ type, icon, size, title, style,
     onClick?.();
   };
   return (
-    <Button
-      aria-label={icon}
-      title={title || icon}
-      data-tooltip-id="tooltip"
-      data-tooltip-content={title}
-      className={'icon-button ' + ((toggled && 'active') || '')}
-      size={size || 'small'}
-      onClick={clicked}
-      style={style}
-    >
-      {icon === 'copy' && <AiFillCopy />}
-      {icon === 'like' && <AiFillLike />}
-      {icon === 'dislike' && <AiFillDislike />}
-      {icon === 'cursor' && <RiInputCursorMove />}
-      {icon === 'replace' && <LuReplace />}
-      {icon === 'file' && <AiFillFileAdd />}
-      {icon === 'goto' && <VscGoToFile />}
-      {icon === 'clear' && <GiBroom />}
-      {icon === 'retry' && <FaArrowRotateLeft />}
-      {icon === 'more' && <BsThreeDots />}
-    </Button>
+    <Tooltip title={title}>
+      <Button
+        aria-label={icon}
+        className={'icon-button ' + ((toggled && 'active') || '')}
+        size={size || 'small'}
+        onClick={clicked}
+        onMouseEnter={onMouseEnter}
+        style={style}
+      >
+        {icon === 'copy' && <AiFillCopy />}
+        {icon === 'like' && <AiFillLike />}
+        {icon === 'dislike' && <AiFillDislike />}
+        {icon === 'cursor' && <RiInputCursorMove />}
+        {icon === 'replace' && <LuReplace />}
+        {icon === 'file' && <AiFillFileAdd />}
+        {icon === 'goto' && <VscGoToFile />}
+        {icon === 'clear' && <GiBroom />}
+        {icon === 'retry' && <FaArrowRotateLeft />}
+        {icon === 'more' && <BsThreeDots />}
+      </Button>
+    </Tooltip>
   );
 };
 
