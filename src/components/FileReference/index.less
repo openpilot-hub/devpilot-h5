@@ -1,12 +1,20 @@
+.file-reference-container {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+
 .file-reference {
   display: inline-flex;
   align-items: center;
-  border: solid 1px #666;
+  border: solid 1px var(--itemBorderColor);
   line-height: 20px;
   padding: 0 6px;
   border-radius: 4px;
   font-size: 12px;
   max-width: 100%;
+  background-color: var(--referenceBg);
 
   & > div {
     flex: 1;
@@ -15,11 +23,11 @@
     text-overflow: ellipsis;
   }
 
-  &-holder {
-    position: absolute;
-    left: 40px;
-    bottom: 21px;
-    width: calc(100% - 58px);
-    padding: 6px 0 6px 4px;
-  }
+  // &-holder {
+  //   position: absolute;
+  //   left: 40px;
+  //   bottom: 21px;
+  //   width: calc(100% - 58px);
+  //   padding: 6px 0 6px 4px;
+  // }
 }

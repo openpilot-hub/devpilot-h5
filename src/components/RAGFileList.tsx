@@ -1,20 +1,20 @@
-import { useI18n } from "@/i18n";
-import { useState } from "react";
-import { IoChevronForward } from "react-icons/io5";
-import { IoChevronDown } from "react-icons/io5";
-import styled from "styled-components";
-import { FaFile } from "react-icons/fa6";
+import { useI18n } from '@/i18n';
+import { Tooltip } from 'antd';
+import { useState } from 'react';
+import { FaFile } from 'react-icons/fa6';
+import { IoChevronDown, IoChevronForward } from 'react-icons/io5';
+import styled from 'styled-components';
 
 const Container = styled.div`
   padding: 0px;
   border-radius: 6px;
   font-family: 'consolas', 'monospace';
   overflow: hidden;
-  background-color: ${props => props.theme.ragFileListBG};
+  background-color: ${(props) => props.theme.ragFileListBG};
   .rag-files-title {
     font-weight: bold;
     user-select: none;
-    background-color: ${props => props.theme.ragFileListTitleBG};
+    background-color: ${(props) => props.theme.ragFileListTitleBG};
     border-top-left-radius: 5px;
     border-top-right-radius: 5px;
     align-middle: center;
@@ -26,7 +26,7 @@ const Container = styled.div`
     cursor: pointer;
     .file-count {
       font-weight: 400;
-      color: ${props => props.theme.textFaint}
+      color: ${(props) => props.theme.textFaint};
     }
   }
   .rag-files-content {
@@ -45,47 +45,41 @@ const Container = styled.div`
       flex-shrink: 0;
     }
     .file-name {
-      flex-shrink: 1; 
+      flex-shrink: 1;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
     }
-    color: ${props => props.theme.ragFileListItemFG};
+    color: ${(props) => props.theme.ragFileListItemFG};
     &:hover {
-      color: ${props => props.theme.ragFileListItemHoverFG};
+      color: ${(props) => props.theme.ragFileListItemHoverFG};
     }
   }
-`
+`;
 
-export default function RAGFileList({ files, clickAction }: { files: string[], clickAction: (file: string) => void }) {
+export default function RAGFileList({ files, clickAction }: { files: string[]; clickAction: (file: string) => void }) {
   const { text } = useI18n();
   const [expaned, setExpanded] = useState(false);
   return (
     <Container>
       <div className="rag-files-title" onClick={() => setExpanded(!expaned)}>
-        { expaned ? <IoChevronDown />: <IoChevronForward />}
-        <span>{text.ragFileListTitle}</span> <span className="file-count">{text.ragFileListTitleFileCount.replace('%n', ''+files.length)}</span>
+        {expaned ? <IoChevronDown /> : <IoChevronForward />}
+        <span>{text.ragFileListTitle}</span>{' '}
+        <span className="file-count">{text.ragFileListTitleFileCount.replace('%n', '' + files.length)}</span>
       </div>
-      {expaned &&
-        <div className="rag-files-content">{
-          files.map((file: any, i: number) => {
+      {expaned && (
+        <div className="rag-files-content">
+          {files.map((file: any, i: number) => {
             return (
-              <div
-                className="rag-files-item"
-                data-tooltip-id="tooltip"
-                data-tooltip-content={file}
-                key={i}
-                onClick={() => {
-                clickAction(file);
-                }}
-              >
-                <FaFile className="file-icon"/> <span className="file-name">{file}</span>
-              </div>
-            )
-          })
-        }
+              <Tooltip title={file}>
+                <div className="rag-files-item" key={i} onClick={() => clickAction(file)}>
+                  <FaFile className="file-icon" /> <span className="file-name">{file}</span>
+                </div>
+              </Tooltip>
+            );
+          })}
         </div>
-      }
+      )}
     </Container>
-  )
+  );
 }

@@ -24,6 +24,7 @@ export enum PluginCommand {
   PresentCodeEmbeddedState = 'PresentCodeEmbeddedState',
   OpenFile = 'OpenFile',
   ReferenceCode = 'ReferenceCode',
+  ShowMessage = 'ShowMessage',
 }
 
 export enum QuickCommand {
@@ -44,13 +45,14 @@ export interface CodeReference {
   languageId: string;
   fileUrl: string;
   fileName: string;
-  sourceCode?: string;
+  sourceCode: string;
   // document: string;
   selectedStartLine: number;
   selectedStartColumn: number;
   selectedEndLine: number;
   selectedEndColumn: number;
-  visible: boolean;
+  order?: number;
+  // visible: boolean;
 }
 
 export type ChatMessageAction = 'like' | 'dislike' | 'delete' | 'regenerate' | 'copy';
@@ -58,13 +60,14 @@ export type ChatMessageAction = 'like' | 'dislike' | 'delete' | 'regenerate' | '
 export interface ChatMessage {
   id: string;
   content: string;
+  mode?: 'with-ctrl';
   status: 'ok' | 'error';
   role: 'user' | 'assistant' | 'system' | 'divider';
   username: string;
   avatar: string;
   time: number;
   streaming: boolean;
-  codeRef?: CodeReference;
+  codeRefs?: CodeReference[];
   actions: Array<ChatMessageAction>;
   recall?: IRecall;
 }
@@ -85,10 +88,10 @@ export type PluginConfiguration = {
   theme: 'light' | 'dark';
   username: string;
   loggedIn: boolean;
-  repo: {
-    name: string;
-    embedding: boolean;
-  };
+  // repo: {
+  //   name: string;
+  //   embedding: boolean;
+  // };
   env?: 'test' | 'prd';
   /**
    * 插件版本号
@@ -108,13 +111,3 @@ export type DevPilot = {
   sendToPlugin: PluginMessageHandler;
   disposeHandler: (handler: PluginMessageHandler) => void;
 };
-
-declare global {
-  interface Window {
-    devpilot: DevPilot;
-    intellijConfig?: PluginConfiguration;
-    acquireVsCodeApi: () => any;
-    receiveFromIntelliJ: PluginMessageHandler;
-    sendToIntelliJ: (message: string) => void;
-  }
-}

@@ -24,6 +24,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "src/typings.ts"],
+  "include": ["src", "src/typings.ts", "global.d.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

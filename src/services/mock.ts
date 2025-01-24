@@ -1,7 +1,7 @@
-import { Lang } from '../i18n';
+import { type I18nLang } from '../i18n';
 import { ChatMessage, DevPilot } from '../typings';
 import { createAssistantMessage, createDividerMessage, createUserMessage, createWelcomeMessage } from './messages';
-export function mockMessages(text: Lang): ChatMessage[] {
+export function mockMessages(text: I18nLang): ChatMessage[] {
   if (process.env.NODE_ENV === 'development') {
     const assistantAnswer = `
   ## Hello from React
@@ -59,17 +59,28 @@ export function mockMessages(text: Lang): ChatMessage[] {
         avatar: '',
         time: Date.now(),
         streaming: false,
-        codeRef: {
-          languageId: 'java',
-          fileName: 'AIGatewayServiceProvider.java',
-          fileUrl: 'a/b/AIGatewayServiceProvider.java',
-          sourceCode: '',
-          selectedStartLine: 1,
-          selectedEndLine: 13,
-          selectedEndColumn: 40,
-          selectedStartColumn: 0,
-          visible: true,
-        },
+        codeRefs: [
+          {
+            languageId: 'java',
+            fileName: 'AIGatewayServiceProvider.java',
+            fileUrl: 'a/b/AIGatewayServiceProvider.java',
+            sourceCode: '',
+            selectedStartLine: 1,
+            selectedEndLine: 13,
+            selectedEndColumn: 40,
+            selectedStartColumn: 0,
+          },
+          {
+            languageId: 'java',
+            fileName: 'AIGatewayServiceProvider.java',
+            fileUrl: 'a/b/AIGatewayServiceProvider.java',
+            sourceCode: '',
+            selectedStartLine: 1,
+            selectedEndLine: 13,
+            selectedEndColumn: 40,
+            selectedStartColumn: 0,
+          },
+        ],
         actions: ['copy', 'delete'],
       },
       createUserMessage('@repo this repo is used for what?'),
@@ -90,7 +101,7 @@ export function mockMessages(text: Lang): ChatMessage[] {
       createAssistantMessage(
         '此代码是一个私有方法，名为`random`，用于在给定的上游服务器列表中根据权重随机选择一个上游服务器。该方法使用加权随机算法来确保选择的概率与每个上游服务器的权重成正比。\n\n### 1. 方法签名和参数\n\n```java\nprivate Upstream random(final int totalWeight, final int halfLengthTotalWeight, final int[] weights, final List<Upstream> upstreamList)\n```\n\n- `totalWeight`：所有上游服务器的总权重\n- `halfLengthTotalWeight`：前半部分权重的总和\n- `weights`：包含每个上游服务器权重的数组\n- `upstreamList`：上游服务器列表\n\n### 2. 初始随机值生成\n\n```java\nint offset = RANDOM.nextInt(totalWeight);\n```\n\n生成一个0到`totalWeight`之间的随机数，用于后续的权重选择。\n\n### 总结\n\n这段代码实现了一个高效的加权随机算法，用于在考虑权重的情况下从上游服务器列表中选择一个服务器。通过使用二分查找优化，该算法能够在处理大量服务器时保持良好的性能。该方法确保了选择的概率与每个服务器的权重成正比，从而实现了负载均衡的目的。',
       ),
-      createAssistantMessage('...', true),
+      // createAssistantMessage('...', true),
     ];
   }
 
@@ -104,9 +115,9 @@ export const mockedPlugin: Omit<DevPilot, 'handlers' | 'sendToPlugin' | 'receive
     locale: 'en',
     username: 'MockUser',
     loggedIn: true,
-    repo: {
-      name: 'xpilot',
-      embedding: true,
-    },
+    // repo: {
+    //   name: 'xpilot',
+    //   embedding: true,
+    // },
   },
 };

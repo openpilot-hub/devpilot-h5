@@ -5,17 +5,29 @@
   max-width: 1280px;
   margin: 0 auto;
   padding: 0;
-  background-color: #333;
 }
 
 code {
-  color: var(--vscode-textPreformat-foreground, #d7ba7d);
-  background-color: var(--vscode-textPreformat-background, rgba(255, 255, 255, 0.1));
   padding: 1px 3px;
   border-radius: 4px;
 }
 
-.devpilot-light code {
-  color: var(--vscode-textPreformat-foreground, #a31515);
-  background-color: var(--vscode-textPreformat-background, rgba(0, 0, 0, 0.1));
+.devpilot-dark {
+  color: var(--vscode-foreground, #cccccc);
+  background-color: rgb(37, 37, 38);
+
+  code {
+    color: var(--vscode-textPreformat-foreground, #d7ba7d);
+    background-color: var(--vscode-textPreformat-background, rgba(255, 255, 255, 0.1));
+  }
+}
+
+.devpilot-light {
+  color: var(--vscode-foreground, #616161);
+  background-color: rgb(243, 243, 243);
+
+  code {
+    color: var(--vscode-textPreformat-foreground, #a31515);
+    background-color: var(--vscode-textPreformat-background, rgba(0, 0, 0, 0.1));
+  }
 }

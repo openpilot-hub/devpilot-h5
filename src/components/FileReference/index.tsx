@@ -1,34 +1,40 @@
 import { sendToPlugin } from '@/services/pluginBridge';
 import { CodeReference, PluginCommand } from '@/typings';
 import { AiOutlineClose, AiOutlineCopyrightCircle } from 'react-icons/ai';
-import { useTheme } from 'styled-components';
 import './index.less';
 
 interface FileReferenceProps {
-  codeRef: CodeReference;
-  onRemove(): void;
+  codeRefs: CodeReference[];
+  onRemove(index: number): void;
+  onChange(e: CodeReference[]): void;
 }
 
-export default function FileReference({ codeRef, onRemove }: FileReferenceProps) {
-  const theme = useTheme();
-
+export default function FileReference({ codeRefs, onRemove, onChange }: FileReferenceProps) {
   return (
-    <div className="file-reference-holder" style={{ backgroundColor: theme.inputFieldBG }}>
-      <div
-        className="file-reference"
-        onClick={() => sendToPlugin(PluginCommand.GotoSelectedCode, codeRef)}
-        style={{ backgroundColor: theme.inputFieldBG }}
-      >
-        <AiOutlineCopyrightCircle style={{ marginRight: 4, color: theme.primary }} />
-        <div style={{ color: theme.text }}>{codeRef.fileName}</div>
-        <AiOutlineClose
-          style={{ marginLeft: 4, cursor: 'pointer', fontSize: 10, color: '#999' }}
-          onClick={(e) => {
-            e.stopPropagation();
-            onRemove();
-          }}
-        />
-      </div>
+    <div className="file-reference-container">
+      {codeRefs.map((codeRef, index) => {
+        return (
+          <div
+            className="file-reference"
+            title={codeRef.fileUrl}
+            onClick={() => {
+              sendToPlugin(PluginCommand.GotoSelectedCode, codeRef);
+              codeRef.order = codeRefs.reduce((ret, next) => Math.max(ret, next.order || 0), 0) + 1;
+              onChange([...codeRefs]);
+            }}
+          >
+            <AiOutlineCopyrightCircle style={{ marginRight: 4, color: 'var(--primaryColor)' }} />
+            <div style={{ color: 'var(--text)' }}>{codeRef.fileName}</div>
+            <AiOutlineClose
+              style={{ marginLeft: 4, cursor: 'pointer', fontSize: 10, color: '#999' }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onRemove(index);
+              }}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 }
